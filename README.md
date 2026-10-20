@@ -1,5 +1,7 @@
 # StructureAdaptiveEvolution
 
+<img width="6849" height="2011" alt="wsri_picture_poster_for_sp" src="https://github.com/user-attachments/assets/2fd3b7ea-ca6b-4aa4-8e7a-7791cce780b0" />
+
 A Wolfram Language paclet for adaptive, multi-objective search over hypergraph rewriting rules.
 Every candidate rule is evaluated by an exact, canonical, breadth-first exploration of its
 multiway system, so the search can tell systems that verifiably halt apart from systems that
