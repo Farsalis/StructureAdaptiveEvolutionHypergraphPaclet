@@ -252,27 +252,27 @@ RunGrowthBudgetMutations[
   {rule = initialRule, baseRatio, ratioRange, result},
 
   Table[
-	  baseRatio = GrowthBudgetFitness[evolveFunction[rule]]["HGMaxEdgeToVertexRatio"];
-	  ratioRange =
-	      If[baseRatio == 0,
-	        {0., 1.},
-	        {
-	          (1 - tolerance) baseRatio,
-	          (1 + tolerance) baseRatio
-	        }
-	      ];
+    baseRatio = GrowthBudgetFitness[evolveFunction[rule]]["HGMaxEdgeToVertexRatio"];
+    ratioRange =
+      If[baseRatio == 0,
+        {0., 1.},
+        {
+          (1 - tolerance) baseRatio,
+          (1 + tolerance) baseRatio
+        }
+      ];
 
-	  result = GrowthBudgetStep[rule, evolveFunction, ratioRange];
-	  rule = result["Rule"];
+    result = GrowthBudgetStep[rule, evolveFunction, ratioRange];
+    rule = result["Rule"];
 
-	    Join[
-	      result,
-	      <|
-	        "Iteration" -> i,
-	        "RatioRange" -> ratioRange
-	      |>
-	    ],
-	    {i, iterations}
+    Join[
+      result,
+      <|
+        "Iteration" -> i,
+        "RatioRange" -> ratioRange
+      |>
+    ],
+    {i, iterations}
   ]
 ];
 
@@ -329,7 +329,7 @@ deleteRHSEdgeMutation[rule_Rule, strategy_String] := Module[
    match becomes strictly more specific and can starve as the motif gets rarer
    (handoff strategies 2 and 9). *)
 AddLHSConditionMutation[rule_Rule] := Module[
-  {lhs, rhs, vars, arity, existing, newEdge, attempt},
+  {lhs, rhs, vars, arity, existing, newEdge = None, attempt},
 
   lhs = rule[[1]];
   rhs = rule[[2]];
@@ -376,7 +376,7 @@ AddLHSConditionMutation[rule_Rule] := Module[
   ];
 
   If[
-    !ValueQ[newEdge],
+    newEdge === None,
     Return @ mutationFailure[
       "AddLHSCondition",
       rule,
@@ -617,7 +617,7 @@ OverlappingMatchMutation[rule_Rule] := Module[
 
       edgeIndex = RandomChoice @ Range @ Length[lhs];
       recordOperator["DeleteLHSCondition", <|"EdgeIndex" -> edgeIndex, "Edge" -> lhs[[edgeIndex]]|>];
-	  Delete[lhs, edgeIndex] -> rhs,
+      Delete[lhs, edgeIndex] -> rhs,
 
     lhs =!= {} && Length[First[lhs]] > 1,
 

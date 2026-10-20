@@ -280,11 +280,9 @@ xpFitnessJSON[_] := <|"Fitness" -> <||>, "FitnessMissingReasons" -> <||>|>
 (*Run manifest*)
 
 
-(* Git commit when `git rev-parse HEAD` works in the paclet root (else
-   Null), whether tracked files differ from it, and whether the repository
-   top level is the paclet root itself (False: an enclosing repository). *)
-
-(* The paclet's git checkout, from the core (Evaluation.wl). *)
+(* The paclet's git checkout, from the core (pacletGitInformation in
+   Evaluation.wl): the commit, whether tracked files differ from it, and
+   whether the repository top level is the paclet root itself. *)
 xpGitInformation[] := pacletGitInformation[]
 
 
@@ -389,8 +387,8 @@ xpManifest[result_Association, hash_String, bytes_Integer] := Module[
   seed = result["Seed"];
   provenance = result["Provenance"];
   candidates = result["Candidates"];
-  (* The commit recorded by the run itself wins over the commit at export
-     time (the core provenance does not record one yet). *)
+  (* The commit recorded by the run itself ("PacletGitCommit" in its
+     provenance) wins over the commit at export time. *)
   git = If[
     StringQ[Lookup[provenance, "PacletGitCommit", None]],
     <|
@@ -1875,9 +1873,6 @@ $DiscoveryReportFields = {
   "Mutation lineage",
   "Interpretation with evidence level"
 };
-
-
-$xpCapStatuses = {"GenerationCap", "EventCap", "StateCap", "TimedOut"};
 
 
 (* Claim discipline: the only phrases used for a status. *)

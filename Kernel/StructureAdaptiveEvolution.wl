@@ -99,10 +99,10 @@ ComponentMetrics::usage =
   "ComponentMetrics[input] returns connected-component metrics for a graph, hypergraph state, state list, or multiway graph.";
 
 GrowthBudgetMutation::usage =
-  "GrowthBudgetMutation[rule] proposes a mutated rule with one fresh RHS variable and 1-2 added RHS hyperedges.";
+  "GrowthBudgetMutation[rule] proposes a mutated rule with one fresh RHS variable and 1-2 added RHS hyperedges; GrowthBudgetMutation[rule, {min, max}] draws the number of added hyperedges between min and max.";
 
 GrowThenConstrainMutation::usage =
-  "GrowThenConstrainMutation[rule] or GrowThenConstrainMutation[rule, \"Grow\"|\"Constrain\"] proposes a growth or constraining mutation.";
+  "GrowThenConstrainMutation[rule] or GrowThenConstrainMutation[rule, \"Grow\" | \"Constrain\"] proposes a growth or constraining mutation.";
 
 OverlappingMatchMutation::usage =
   "OverlappingMatchMutation[rule] proposes a rule with a less restrictive LHS.";
@@ -128,16 +128,35 @@ VariableRewiringMutation::usage =
 OrderedEdgePermutationMutation::usage =
   "OrderedEdgePermutationMutation[rule] permutes the vertex positions inside one edge of an ordered rule; OrderedEdgePermutationMutation[rule, \"Left\" | \"Right\"] targets one side. Requires the ordered or declared universe.";
 
-GrowthBudgetStep::usage = "GrowthBudgetStep[rule, evolveFunction, ratioRange] performs one standalone growth-budget mutation step.";
-RunGrowthBudgetMutations::usage = "RunGrowthBudgetMutations[rule, evolveFunction, iterations, tolerance] chains standalone growth-budget steps.";
-GrowThenConstrainStep::usage = "GrowThenConstrainStep[rule, evolveFunction, targetVertices, targetEdges] performs one standalone grow-then-constrain step.";
-RunGrowThenConstrainMutations::usage = "RunGrowThenConstrainMutations[rule, evolveFunction, iterations, targetVertices, targetEdges] chains standalone grow-then-constrain steps.";
-OverlappingMatchStep::usage = "OverlappingMatchStep[rule, evolveFunction] performs one standalone overlapping-match step.";
-RunOverlappingMatchMutations::usage = "RunOverlappingMatchMutations[rule, evolveFunction, iterations] chains standalone overlapping-match steps.";
-DelayedTerminationStep::usage = "DelayedTerminationStep[rule, evolveFunction] performs one standalone delayed-termination step.";
-RunDelayedTerminationMutations::usage = "RunDelayedTerminationMutations[rule, evolveFunction, iterations] chains standalone delayed-termination steps.";
-RuntimeThrottlingStep::usage = "RuntimeThrottlingStep[rule, evolveFunction, retainedStateFraction] performs one standalone runtime-throttling step.";
-RunRuntimeThrottlingMutations::usage = "RunRuntimeThrottlingMutations[rule, evolveFunction, iterations, retainedStateFraction] chains standalone runtime-throttling steps.";
+GrowthBudgetStep::usage =
+  "GrowthBudgetStep[rule, evolveFunction, ratioRange] performs one standalone growth-budget mutation step.";
+
+RunGrowthBudgetMutations::usage =
+  "RunGrowthBudgetMutations[rule, evolveFunction, iterations, tolerance] chains standalone growth-budget steps.";
+
+GrowThenConstrainStep::usage =
+  "GrowThenConstrainStep[rule, evolveFunction, targetVertices, targetEdges] performs one standalone grow-then-constrain step.";
+
+RunGrowThenConstrainMutations::usage =
+  "RunGrowThenConstrainMutations[rule, evolveFunction, iterations, targetVertices, targetEdges] chains standalone grow-then-constrain steps.";
+
+OverlappingMatchStep::usage =
+  "OverlappingMatchStep[rule, evolveFunction] performs one standalone overlapping-match step.";
+
+RunOverlappingMatchMutations::usage =
+  "RunOverlappingMatchMutations[rule, evolveFunction, iterations] chains standalone overlapping-match steps.";
+
+DelayedTerminationStep::usage =
+  "DelayedTerminationStep[rule, evolveFunction] performs one standalone delayed-termination step.";
+
+RunDelayedTerminationMutations::usage =
+  "RunDelayedTerminationMutations[rule, evolveFunction, iterations] chains standalone delayed-termination steps.";
+
+RuntimeThrottlingStep::usage =
+  "RuntimeThrottlingStep[rule, evolveFunction, retainedStateFraction] performs one standalone runtime-throttling step.";
+
+RunRuntimeThrottlingMutations::usage =
+  "RunRuntimeThrottlingMutations[rule, evolveFunction, iterations, retainedStateFraction] chains standalone runtime-throttling steps.";
 
 
 (* Public symbols of further modules are declared in Kernel/Usage/*.wl, which

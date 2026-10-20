@@ -65,6 +65,11 @@ metricValue[candidate_, metric_String] :=
   Lookup[Lookup[candidate, "Fitness", <||>], metric, Missing["NotComputed"]]
 
 
+(* A metric value as a plot coordinate: Booleans become 1 and 0. *)
+plotValue[candidate_, metric_String] :=
+  metricValue[candidate, metric] /. {True -> 1, False -> 0}
+
+
 unknownCandidate[candidateID_] :=
   Failure[
     "UnknownCandidate",
@@ -132,14 +137,14 @@ ParetoFrontPlot[result_Association, {metric1_String, metric2_String}] := Module[
   valid = Select[
     result["Candidates"],
     TrueQ[#["ValidQ"]] &&
-      NumericQ[metricValue[#, metric1] /. True -> 1 /. False -> 0] &&
-      NumericQ[metricValue[#, metric2] /. True -> 1 /. False -> 0] &
+      NumericQ[plotValue[#, metric1]] &&
+      NumericQ[plotValue[#, metric2]] &
   ];
 
   point[candidate_] := Tooltip[
     {
-      metricValue[candidate, metric1] /. True -> 1 /. False -> 0,
-      metricValue[candidate, metric2] /. True -> 1 /. False -> 0
+      plotValue[candidate, metric1],
+      plotValue[candidate, metric2]
     },
     Column[{shortID[candidate["CandidateID"]], candidate["Strategy"], candidate["Status"]}]
   ];
@@ -248,7 +253,7 @@ FitnessTrajectoryPlot[result_Association, candidateID_String, metric_String] := 
   ];
 
   values = MapIndexed[
-    {First[#2] - 1, metricValue[#1, metric] /. True -> 1 /. False -> 0} &,
+    {First[#2] - 1, plotValue[#1, metric]} &,
     chain
   ];
 

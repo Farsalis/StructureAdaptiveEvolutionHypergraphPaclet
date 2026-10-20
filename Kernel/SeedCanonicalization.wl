@@ -776,7 +776,7 @@ singleRuleRegistryEntries[] :=
 seedResolutionFailure[message_String, details_Association : <||>] :=
   Failure[
     "SeedResolutionFailed",
-    <|"Message" -> message|> ~Join~ details
+    Join[<|"Message" -> message|>, details]
   ]
 
 

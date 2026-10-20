@@ -35,7 +35,7 @@ hypergraphVersionString[] := hypergraphVersionString[] =
 
 
 evolutionFailure[message_String, details_Association : <||>] :=
-  Failure["EvolutionFailed", <|"Message" -> message|> ~Join~ details]
+  Failure["EvolutionFailed", Join[<|"Message" -> message|>, details]]
 
 
 (* All canonical one-event successors of a canonical state, with the raw
@@ -301,15 +301,6 @@ CanonicalMultiwayEvolution[rule_, state_, ___] :=
   ]
 
 
-(* Layered evolution list convention used by the strategy helpers:
-   {gen0, gen1, ...} with a trailing {} exactly when the system halted. *)
-MultiwayEvolutionList[rule_, initialState_, limits_Association : <||>] :=
-  Replace[
-    CanonicalMultiwayEvolution[rule, initialState, limits],
-    result_Association :> result["Generations"]
-  ]
-
-
 (* ::Section:: *)
 (*Artifacts*)
 
@@ -365,7 +356,9 @@ registerArtifactBuilder[name_String, builder_, dependencies_List : {}] := (
 
 expandArtifactDependencies[names_List] :=
   FixedPoint[
-    DeleteDuplicates[Join[Catenate[Lookup[$ArtifactDependencies, #, {}] & /@ #], #]] &,
+    Function[current,
+      DeleteDuplicates[Join[Catenate[Lookup[$ArtifactDependencies, #, {}] & /@ current], current]]
+    ],
     names
   ]
 

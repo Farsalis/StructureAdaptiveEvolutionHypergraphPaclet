@@ -1152,10 +1152,11 @@ registerMutationStrategies[$catalogStrategies];
    strategy alone, its primary objectives plus HaltedWithinCapQ and
    MultiwayStateCount. The primary objectives are Diagnostic metrics in the
    registry; "MetricOverrides" holds the overrides that make them Pareto
-   objectives in the catalog's direction. ValidateEvolutionConfiguration does
-   not read preset overrides yet, so until it does they must be passed
-   explicitly as the "MetricOverrides" option. "Target" objectives use the
-   targets below unless overridden. *)
+   objectives in the catalog's direction. ValidateEvolutionConfiguration
+   applies them when the preset also supplies the metric list
+   ("FitnessMetrics" -> Automatic); fields of the user's own
+   "MetricOverrides" take precedence. "Target" objectives use the targets
+   below unless overridden. *)
 $catalogObjectiveTargets = <|"EffectiveDimensionEstimate" -> 2., "HGMeanEdgeToVertexRatio" -> 1.5|>;
 
 catalogObjectiveOverrides[objectives_Association] :=

@@ -65,7 +65,7 @@ Scan[
     "  applicableRate=", #["InitiallyApplicableRate"],
     "  terminationRate=", #["TerminationRate"],
     "  medianStates=", #["MedianMultiwayStateCount"]] &,
-  Replace[result["InitialStateDiagnostics"], m_Missing :> <|"Finalists" -> {}|>]["Finalists"]
+  Replace[result["InitialStateDiagnostics"], _Missing -> <|"Finalists" -> {}|>]["Finalists"]
 ];
 
 Print["=== Demo complete ==="];

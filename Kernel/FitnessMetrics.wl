@@ -21,25 +21,6 @@ numericOrMissingQ[value_] := NumericQ[value] || MissingQ[value]
 
 
 (* ::Subsection:: *)
-(*Update-order helpers*)
-
-
-FinalState[evo_] := If[ListQ[evo], Last[evo], evo["FinalState"]]
-
-(* Compares canonical final states in the active universe, so fresh vertex
-   names created by different update orders do not count as differences. *)
-FinalStatesDifferentQ[evo1_, evo2_] :=
-  CanonicalStateForm[FinalState[evo1]] =!= CanonicalStateForm[FinalState[evo2]]
-
-
-CausalGraphsDifferentQ[evo1_, evo2_] :=
-  ! IsomorphicGraphQ[
-    evo1["CausalGraph"],
-    evo2["CausalGraph"]
-  ]
-
-
-(* ::Subsection:: *)
 (*Dimension calculations*)
 
 
@@ -169,8 +150,6 @@ HypergraphDensity[hg_] := Module[
   ]
 ]
 
-OrderedHypergraphDensity[hg_] := Block[{$EdgeSymmetry = "Ordered"}, HypergraphDensity[hg]]
-
 
 (* Largest number of copies of one edge class (1 for duplicate-free states;
    always 1 in the unordered universe). *)
@@ -191,22 +170,7 @@ EdgeMultiplicityMax[hg_] :=
 (*Regular graph size*)
 
 
-GraphAltDensity[g_] := N[GraphDensity[g]]
 GraphSafeAltDensity[g_] := If[VertexCount[g] < 2, "-", NumberForm[N[GraphDensity[g]], {3, 2}]]
-
-
-EdgeToVertexRatio[g_Graph] := Module[
-  {edgeCount, vertexCount},
-
-  edgeCount = EdgeCount[g];
-  vertexCount = VertexCount[g];
-
-  If[
-    vertexCount == 0,
-    0.,
-    N[edgeCount / vertexCount]
-  ]
-]
 
 
 (* ::Subsection:: *)
@@ -215,8 +179,6 @@ EdgeToVertexRatio[g_Graph] := Module[
 
 (* Sink vertices only; genuine rule inapplicability is verified by the evaluator. *)
 TerminalStates[g_Graph?DirectedGraphQ] := Pick[VertexList[g], VertexOutDegree[g], 0]
-
-TerminalStateCount[g_Graph?DirectedGraphQ] := Length @ TerminalStates[g]
 
 
 (* ::Subsection:: *)
@@ -299,45 +261,6 @@ ComponentMetrics[g_Graph] := Module[
 		  "LargestConnectedComponentSize" -> Max[compSizes],
 		  "LargestComponentRatio" -> N[Max[compSizes] / Total[compSizes]]|>
 	]
-]
-
-
-(* ::Subsection:: *)
-(*Update-order sensitivity*)
-
-
-(* Expects {evoOrder1, evoOrder2, ...} from different update orders *)
-UpdateOrderSensitivity[runs_List] := Module[
-  {pairs, stateDiffs, causalDiffs},
-
-  pairs = Subsets[runs, {2}];
-
-  If[pairs === {}, Return[0.]];
-
-  stateDiffs =
-    Boole[FinalStatesDifferentQ @@ #] & /@ pairs;
-
-  causalDiffs =
-    Boole[CausalGraphsDifferentQ @@ #] & /@ pairs;
-
-  N @ Mean[
-    Mean /@ Transpose[{stateDiffs, causalDiffs}]
-  ]
-]
-
-
-(* Expects a list of final-state carriers (state lists or event evolutions) *)
-UpdateOrderSensitivityStateOnly[runs_List] := Module[{pairs},
-
-  If[Length[runs] < 2, Return[0.]];
-
-  pairs = Subsets[runs, {2}];
-
-  If[pairs === {}, 0.,
-    N @ Mean[
-      Boole[FinalStatesDifferentQ @@ #] & /@ pairs
-    ]
-  ]
 ]
 
 

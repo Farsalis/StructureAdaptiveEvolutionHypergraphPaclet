@@ -443,7 +443,7 @@ xmComponentLifetimes[evolution_Association] := Module[{occurrences},
     ],
     First -> Last
   ];
-  Catenate[Length /@ Split[Sort[#], #2 === #1 + 1 &] & /@ Values[occurrences]]
+  Catenate[Function[steps, Length /@ Split[Sort[steps], #2 === #1 + 1 &]] /@ Values[occurrences]]
 ]
 
 
@@ -1319,10 +1319,9 @@ xmResolveCriteria[other_] :=
   Failure["InvalidClassificationCriteria", <|"Message" -> "Criteria must be Automatic, label names or an Association.", "Criteria" -> other|>]
 
 
-(* ValidateEvolutionConfiguration is not idempotent (a normalized
-   configuration has "SymmetryGroups" -> <||>, which the validator rejects
-   outside the declared universe), so a normalized configuration, such as
-   a run's stored "Configuration", is used as given. *)
+(* A normalized configuration, such as a run's stored "Configuration", is
+   used as given, not validated again: the stored "ResumeFrom" of a resumed
+   run keeps only the resumed run's ID, which the validator rejects. *)
 xmNormalizedConfigurationQ[configuration_Association] :=
   KeyExistsQ[configuration, "RecommendedMutationStrategies"] &&
     ListQ[Lookup[configuration, "FitnessMetrics", None]] &&
