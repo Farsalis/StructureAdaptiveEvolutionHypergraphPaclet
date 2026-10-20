@@ -1,4 +1,4 @@
-# StructureAdaptiveEvolution
+# Structure-Adaptive Evolution for Hypergraphs
 
 <img width="6849" height="2011" alt="wsri_picture_poster_for_sp" src="https://github.com/user-attachments/assets/2fd3b7ea-ca6b-4aa4-8e7a-7791cce780b0" />
 
@@ -13,7 +13,6 @@ result-only visualizations.
 - Requires: Wolfram Language 15+, the `WolframInstitute/Hypergraph` paclet (tested with 1.2.3)
 - Contexts: ``SamuelFrerichs`StructureAdaptiveEvolution` `` and
   ``SamuelFrerichs`StructureAdaptiveEvolution`Visualizations` ``
-- License: MIT
 
 ## Loading
 
