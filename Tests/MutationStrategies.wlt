@@ -145,20 +145,18 @@ VerificationTest[
   TestID -> "Strat-DelayedTerminationAddsOneEdge"
 ]
 
-(* Registry: all seven implemented with mutation functions and provenance. *)
+(* Registry: the seven core strategies are present (modules may add more);
+   every strategy is implemented with a mutation function and operators. *)
 VerificationTest[
   Module[{registry = Symbol[$P <> "$MutationStrategyRegistry"]},
-    {Sort @ Keys[registry],
+    {SubsetQ[Keys[registry], {"GrowthBudget", "OverlappingMatch", "GrowThenConstrain",
+       "DelayedTermination", "RuntimeThrottling", "VariableRewiring",
+       "OrderedEdgePermutation"}],
      AllTrue[Values[registry], TrueQ[#["ImplementedQ"]] &],
      AllTrue[Values[registry], MatchQ[#["MutationFunction"], _Symbol] &],
      AllTrue[Values[registry], MatchQ[#["Operators"], {__String}] &]}
   ],
-  {
-    Sort @ {"GrowthBudget", "OverlappingMatch", "GrowThenConstrain",
-      "DelayedTermination", "RuntimeThrottling", "VariableRewiring",
-      "OrderedEdgePermutation"},
-    True, True, True
-  },
+  {True, True, True, True},
   TestID -> "Strat-RegistryComplete"
 ]
 

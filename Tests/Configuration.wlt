@@ -101,7 +101,7 @@ VerificationTest[
 VerificationTest[
   ValidateEvolutionConfiguration[
     <|"EvolutionLimits" -> <|"MaxGenerations" -> 3|>|>]["EvolutionLimits"],
-  <|"MaxGenerations" -> 3, "MaxEvents" -> 1000, "TimeConstraint" -> 30.|>,
+  <|"MaxGenerations" -> 3, "MaxEvents" -> 1000, "MaxStates" -> Infinity, "TimeConstraint" -> 30.|>,
   TestID -> "Config-LimitsMergedWithDefaults"
 ]
 

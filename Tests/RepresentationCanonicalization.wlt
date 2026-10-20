@@ -78,6 +78,18 @@ VerificationTest[
 ]
 
 VerificationTest[
+  Module[{report = CanonicalFormSelfTest["Trials" -> 30, "Vertices" -> 4], rows},
+    rows = Normal[report["Results"]];
+    {
+      Lookup[Select[rows, #["Backend"] === "Exact" &], {"InvarianceFailures", "CompletenessFailures", "NotIsomorphicCopy"}],
+      Lookup[Select[rows, #["Backend"] === "Native" &], "NotIsomorphicCopy"]
+    }
+  ],
+  {{{0, 0, 0}, {0, 0, 0}}, {0, 0}},
+  TestID -> "Canon-CanonicalFormSelfTest"
+]
+
+VerificationTest[
   Module[{seedA, seedB, cfgA, cfgB},
     cfgA = ValidateEvolutionConfiguration[
       <|"Rule" -> ({{x, y}} -> {{x, z}, {z, y}}), "InitialState" -> {{1, 2}}|>];

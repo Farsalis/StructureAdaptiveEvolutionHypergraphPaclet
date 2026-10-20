@@ -1,28 +1,41 @@
 #!/usr/bin/env wolframscript
-(* Fresh-kernel clean-load verification: public symbols present, usage
-   messages attached, no Global` leakage from loading. *)
+(* Fresh-kernel clean-load verification: the package loads without messages,
+   every public symbol has a usage message, registries stay private and
+   loading leaks no Global` symbols. Exits with status 1 on any failure.
+   Run with: wolframscript -file FreshLoadCheck.wls *)
 
 before = Names["Global`*"];
 
-PacletDirectoryLoad[ParentDirectory[DirectoryName[$InputFileName]]];
-Needs["SamuelFrerichs`HypergraphGuidedAdaptiveEvolution`"];
-Needs["SamuelFrerichs`HypergraphGuidedAdaptiveEvolution`Visualizations`"];
+loadMessages = {};
+Internal`HandlerBlock[
+  {"Message", If[Last[#], AppendTo[loadMessages, First[#]]] &},
+  PacletDirectoryLoad[ParentDirectory[DirectoryName[$InputFileName]]];
+  Needs["SamuelFrerichs`StructureAdaptiveEvolution`"];
+  Needs["SamuelFrerichs`StructureAdaptiveEvolution`Visualizations`"]
+];
 
 after = Names["Global`*"];
 
-publicMain = Names["SamuelFrerichs`HypergraphGuidedAdaptiveEvolution`*"];
-publicViz = Names["SamuelFrerichs`HypergraphGuidedAdaptiveEvolution`Visualizations`*"];
+publicMain = Names["SamuelFrerichs`StructureAdaptiveEvolution`*"];
+publicViz = Names["SamuelFrerichs`StructureAdaptiveEvolution`Visualizations`*"];
 
-Print["Main public symbols:  ", Length[publicMain]];
-Print["Viz public symbols:   ", publicViz];
-Print["Global leakage:       ", Complement[after, before]];
-Print["Usage messages OK:    ",
-  AllTrue[
-    {StructureAdaptiveEvolution::usage, ValidateEvolutionConfiguration::usage,
-     CanonicalMultiwayEvolution::usage, EvaluateCandidate::usage,
-     ResolveAndCanonicalizeSeed::usage},
-    StringQ
-  ]
+missingUsage = Select[
+  Join[publicMain, publicViz],
+  !StringQ[ToExpression[# <> "::usage"]] &
 ];
-Print["Registries private:   ",
-  Names["SamuelFrerichs`HypergraphGuidedAdaptiveEvolution`$*"] === {}];
+
+leakage = Complement[after, before, {"before", "loadMessages", "after"}];
+registriesPrivate = Names["SamuelFrerichs`StructureAdaptiveEvolution`$*"] === {};
+
+Print["Main public symbols:     ", Length[publicMain]];
+Print["Viz public symbols:      ", Length[publicViz]];
+Print["Load messages:           ", loadMessages];
+Print["Symbols without usage:   ", missingUsage];
+Print["Global leakage:          ", leakage];
+Print["Registries private:      ", registriesPrivate];
+
+ok = loadMessages === {} && missingUsage === {} && leakage === {} && registriesPrivate &&
+  Length[publicMain] > 0 && Length[publicViz] > 0;
+
+Print[If[ok, "FRESH LOAD CHECK PASSED", "FRESH LOAD CHECK FAILED"]];
+Exit[If[ok, 0, 1]];

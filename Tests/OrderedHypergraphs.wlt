@@ -210,7 +210,7 @@ VerificationTest[
       ]
     }
   ],
-  {True, "Ordered", "CanonicalHypergraph-OrderedMultiset", True, True, True},
+  {True, "Ordered", "ExactCanonical-OrderedMultiset", True, True, True},
   TestID -> "Ordered-DispatchSmokeTest"
 ]
 

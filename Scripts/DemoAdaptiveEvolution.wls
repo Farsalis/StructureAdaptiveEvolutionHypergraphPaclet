@@ -1,12 +1,12 @@
 #!/usr/bin/env wolframscript
-(* Fixed-seed demonstration of the HypergraphGuidedAdaptiveEvolution MVP.
+(* Fixed-seed demonstration of StructureAdaptiveEvolution.
    Run with: wolframscript -file DemoAdaptiveEvolution.wls *)
 
 PacletDirectoryLoad[ParentDirectory[DirectoryName[$InputFileName]]];
-Needs["SamuelFrerichs`HypergraphGuidedAdaptiveEvolution`"];
-Needs["SamuelFrerichs`HypergraphGuidedAdaptiveEvolution`Visualizations`"];
+Needs["SamuelFrerichs`StructureAdaptiveEvolution`"];
+Needs["SamuelFrerichs`StructureAdaptiveEvolution`Visualizations`"];
 
-Print["=== HypergraphGuidedAdaptiveEvolution demo (RandomSeed -> 2026) ==="];
+Print["=== StructureAdaptiveEvolution demo (RandomSeed -> 2026) ==="];
 
 result = StructureAdaptiveEvolution[
   "Rule" -> ({{x, y}, {y, z}} -> {{x, z}}),
@@ -16,6 +16,7 @@ result = StructureAdaptiveEvolution[
   "EvolutionLimits" -> <|
     "MaxGenerations" -> 6,
     "MaxEvents" -> 400,
+    "MaxStates" -> 2000,
     "TimeConstraint" -> 20.
   |>,
   "RandomSeed" -> 2026
@@ -26,21 +27,29 @@ If[FailureQ[result],
   Exit[1]
 ];
 
+Print["Run ID:               ", result["RunID"]];
+Print["Versions:             ", KeyTake[result["Provenance"],
+  {"PacletVersion", "HypergraphPacletVersion", "EvaluatorVersion", "WolframVersionNumber", "StateEquivalence"}]];
 Print["Seed rule:            ", result["Seed"]["Rule"]];
 Print["Seed initial state:   ", result["Seed"]["InitialState"]];
 Print["Candidates evaluated: ", Length[result["Candidates"]]];
 Print["Status counts:        ", Counts[Lookup[result["Candidates"], "Status"]]];
 Print["Search front size:    ", Length[result["SearchParetoFront"]]];
 Print["Solution front size:  ", Length[result["SolutionParetoFront"]]];
+Print["Proposal failures:    ", Length[result["ProposalFailures"]]];
 Print["Final weights:        ", result["FinalStrategyWeights"]];
+Print["Performance:          ", KeyTake[result["Performance"],
+  {"FreshEvaluations", "CacheHits", "DuplicateProposals", "EvaluationsPerSecond", "PeakStateCount"}]];
 
 If[result["SolutionParetoFront"] === {},
-  Print["No verified terminating candidate was found under the supplied limits."],
-  Print["Verified terminating solution(s):"];
+  Print["No candidate was verified to halt under the stated limits."],
+  Print["Verified to halt under this finite reachable exploration:"];
   Scan[
     Print["  ", StringTake[#["CandidateID"], 8], "  ", #["Rule"],
       "  states=", #["Fitness"]["MultiwayStateCount"],
-      "  maxVertices=", #["Fitness"]["HGMaxVerticesCount"]] &,
+      "  longestDerivation=", #["Fitness"]["MultiwayLongestDerivation"],
+      "  maxVertices=", #["Fitness"]["HGMaxVerticesCount"],
+      "  operators=", Lookup[#["Provenance"]["AppliedOperators"], "Operator", {}]] &,
     result["SolutionParetoFront"]
   ]
 ];

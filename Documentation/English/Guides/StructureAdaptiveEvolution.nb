@@ -1,0 +1,1106 @@
+(* Content-type: application/vnd.wolfram.mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='Wolfram 15.0' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[       154,          7]
+NotebookDataLength[     44634,       1097]
+NotebookOptionsPosition[     38453,       1003]
+NotebookOutlinePosition[     38926,       1019]
+CellTagsIndexPosition[     38883,       1016]
+WindowFrame->Normal*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+
+Cell[CellGroupData[{
+Cell["Metadata", "MetadataSection",ExpressionUUID->"5a53ae7a-6714-104a-bb76-79a07b8bcab1"],
+
+Cell[TextData[{
+ "New in: ",
+ Cell["2.0", "HistoryData",
+  CellTags->"New",ExpressionUUID->"dcd399b7-4c9e-8f48-8c09-1bcf5f920aa6"],
+ " | Modified in: ",
+ Cell[" ", "HistoryData",
+  CellTags->"Modified",ExpressionUUID->"3ec6eaa8-d6fb-dc4e-a65e-997860e2e572"],
+ " | Obsolete in: ",
+ Cell[" ", "HistoryData",
+  CellTags->"Obsolete",ExpressionUUID->
+  "a953fab2-8c5a-a644-b7ee-6000dc396620"]
+}], "History",ExpressionUUID->"7ae5241e-cfdb-6446-aa12-9bbcb7e4063f"],
+
+Cell[CellGroupData[{
+
+Cell["Categorization", "CategorizationSection",ExpressionUUID->"4aff94c8-f5dc-7f46-ae8b-24f1ae375317"],
+
+Cell["Guide", "Categorization",
+ CellLabel->
+  "Entity Type",ExpressionUUID->"cb4caa24-3a6c-404d-8ed8-2672ed808ea9"],
+
+Cell["SamuelFrerichs/StructureAdaptiveEvolution", "Categorization",
+ CellLabel->
+  "Paclet Name",ExpressionUUID->"b0707893-49ca-244b-a1f7-c2a714886eac"],
+
+Cell["SamuelFrerichs`StructureAdaptiveEvolution`", "Categorization",
+ CellLabel->"Context",ExpressionUUID->"756f5108-566a-9747-9af1-69d5aaa8c68d"],
+
+Cell["\<\
+SamuelFrerichs/StructureAdaptiveEvolution/guide/StructureAdaptiveEvolution\
+\>", "Categorization",
+ CellLabel->"URI",ExpressionUUID->"45d1cbd3-0c37-6d4f-ba21-5a6e7f37515f"]
+}, Closed]],
+
+Cell[CellGroupData[{
+
+Cell["Keywords", "KeywordsSection",ExpressionUUID->"ab93f132-55c4-a34d-9fb5-d05d3c716e02"],
+
+Cell["hypergraph rewriting", "Keywords",ExpressionUUID->"c1557e97-a24d-1a43-81ad-10a4d1d09066"],
+
+Cell["multiway system", "Keywords",ExpressionUUID->"853bb9dd-1bce-c84c-8a6d-29f988795bde"],
+
+Cell["adaptive evolution", "Keywords",ExpressionUUID->"78886b52-9584-7245-8209-ee86ce57b6ed"],
+
+Cell["Pareto search", "Keywords",ExpressionUUID->"932d0d34-a445-e94c-8f64-c5b9399248c1"],
+
+Cell["termination", "Keywords",ExpressionUUID->"aa5267f3-4fa0-7744-a12b-bcde74a8bb25"],
+
+Cell["confluence", "Keywords",ExpressionUUID->"76d5cc09-0038-0d4a-89a1-05eaa5cf18d9"]
+}, Closed]]
+}, Closed]],
+
+Cell["StructureAdaptiveEvolution", "GuideTitle",ExpressionUUID->"302e9e48-4ab1-814b-a1df-97413838703e"],
+
+Cell["\<\
+StructureAdaptiveEvolution searches over hypergraph rewriting rules for \
+systems with chosen properties. Every candidate rule is evaluated by an \
+exact, canonical, breadth-first exploration of its multiway system, so \
+systems that verifiably halt are told apart from systems that only ran out of \
+budget. Analysis tools probe termination, confluence and update-order \
+behaviour, and an experiment layer makes results reproducible and \
+statistically comparable.\
+\>", "GuideAbstract",ExpressionUUID->"524bce9f-dd2e-1b4d-b2b5-e0a46b013080"],
+
+Cell[CellGroupData[{
+
+Cell["", "GuideFunctionsSection",ExpressionUUID->"746a5db8-5ccc-5c45-83e7-93aa499f31a2"],
+
+Cell[CellGroupData[{
+
+Cell["Search and evaluation", "GuideFunctionsSubsection",ExpressionUUID->"dd2ece9b-2763-a341-8937-2410ecad803f"],
+
+Cell[TextData[{
+ Cell[BoxData[
+  ButtonBox["StructureAdaptiveEvolution",
+   BaseStyle->"Link",
+   ButtonData->
+    "paclet:SamuelFrerichs/StructureAdaptiveEvolution/ref/\
+StructureAdaptiveEvolution"]], "InlineGuideFunction",
+  TaggingRules->{"PageType" -> "Function"},ExpressionUUID->
+  "6c64948c-24ed-4b40-b41d-b8752a6b0958"],
+ " \[LongDash] adaptive multi-objective search with search and solution \
+Pareto fronts"
+}], "GuideText",ExpressionUUID->"fb4155f7-d236-d14d-baf6-3ac276c202ef"],
+
+Cell[TextData[{
+ Cell[BoxData[
+  ButtonBox["EvaluateCandidate",
+   BaseStyle->"Link",
+   ButtonData->
+    "paclet:SamuelFrerichs/StructureAdaptiveEvolution/ref/EvaluateCandidate"]]\
+, "InlineGuideFunction",
+  TaggingRules->{"PageType" -> "Function"},ExpressionUUID->
+  "ce0d6b42-387d-4547-9e37-01e23a43b8c5"],
+ " \[LongDash] evaluate one rule and initial state, with cached evaluation \
+identities"
+}], "GuideText",ExpressionUUID->"1277ec29-3983-094c-9c95-4c9defe23ed1"],
+
+Cell[TextData[{
+ Cell[BoxData[
+  ButtonBox["ValidateEvolutionConfiguration",
+   BaseStyle->"Link",
+   ButtonData->
+    "paclet:SamuelFrerichs/StructureAdaptiveEvolution/ref/\
+ValidateEvolutionConfiguration"]], "InlineGuideFunction",
+  TaggingRules->{"PageType" -> "Function"},ExpressionUUID->
+  "27c9098d-13da-184d-8127-85ca9360f055"],
+ StyleBox[" \[FilledVerySmallSquare] ", "InlineSeparator"],
+ Cell[BoxData[
+  ButtonBox["ResolveAndCanonicalizeSeed",
+   BaseStyle->"Link",
+   ButtonData->
+    "paclet:SamuelFrerichs/StructureAdaptiveEvolution/ref/\
+ResolveAndCanonicalizeSeed"]], "InlineGuideFunction",
+  TaggingRules->{"PageType" -> "Function"},ExpressionUUID->
+  "25f2f0a8-f721-4c4a-9f5b-efff16ffe482"]
+}], "InlineGuideFunctionListing",ExpressionUUID->"e05439d2-57a8-8543-bab8-\
+7209262395b5"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["Exploration and canonical forms", "GuideFunctionsSubsection",ExpressionUUID->"6810b598-a8b0-784e-a48a-c1c37ee0ea2a"],
+
+Cell[TextData[{
+ Cell[BoxData[
+  ButtonBox["CanonicalMultiwayEvolution",
+   BaseStyle->"Link",
+   ButtonData->
+    "paclet:SamuelFrerichs/StructureAdaptiveEvolution/ref/\
+CanonicalMultiwayEvolution"]], "InlineGuideFunction",
+  TaggingRules->{"PageType" -> "Function"},ExpressionUUID->
+  "654d3269-f5db-f348-a00f-fa3e1e9737a4"],
+ " \[LongDash] breadth-first multiway exploration up to isomorphism, with \
+halting and cycle status"
+}], "GuideText",ExpressionUUID->"46b2dd07-069a-a844-9eaa-08f27cca7db7"],
+
+Cell[TextData[{
+ Cell[BoxData[
+  ButtonBox["MultiwayLongestDerivation",
+   BaseStyle->"Link",
+   ButtonData->
+    "paclet:SamuelFrerichs/StructureAdaptiveEvolution/ref/\
+MultiwayLongestDerivation"]], "InlineGuideFunction",
+  TaggingRules->{"PageType" -> "Function"},ExpressionUUID->
+  "ab6bb340-7cfa-1f43-b613-12e82300e832"],
+ " \[LongDash] exact longest derivation of a halted system"
+}], "GuideText",ExpressionUUID->"4d50cff4-f006-ee4d-a5d4-a53b6f3bc942"],
+
+Cell[TextData[{
+ Cell[BoxData[
+  ButtonBox["RewriteEventEvolution",
+   BaseStyle->"Link",
+   ButtonData->
+    "paclet:SamuelFrerichs/StructureAdaptiveEvolution/ref/\
+RewriteEventEvolution"]], "InlineGuideFunction",
+  TaggingRules->{"PageType" -> "Function"},ExpressionUUID->
+  "683b61af-1a26-254c-8204-e58f1def4a52"],
+ " \[LongDash] single-way evolution with events, edge identities, update \
+orders and causal graphs"
+}], "GuideText",ExpressionUUID->"617c334e-4c44-7245-83cc-9fa131924ec9"],
+
+Cell[TextData[{
+ Cell[BoxData[
+  ButtonBox["CanonicalStateForm",
+   BaseStyle->"Link",
+   ButtonData->
+    "paclet:SamuelFrerichs/StructureAdaptiveEvolution/ref/CanonicalStateForm"]\
+], "InlineGuideFunction",
+  TaggingRules->{"PageType" -> "Function"},ExpressionUUID->
+  "ae2b7674-bf9b-0c4e-afa9-08fbded7f364"],
+ " \[LongDash] canonical form of a state in the unordered, ordered or \
+declared universe"
+}], "GuideText",ExpressionUUID->"4a73bace-fe58-0744-9742-8f1cdcbe0a1b"],
+
+Cell[TextData[{
+ Cell[BoxData[
+  ButtonBox["CanonicalRuleForm",
+   BaseStyle->"Link",
+   ButtonData->
+    "paclet:SamuelFrerichs/StructureAdaptiveEvolution/ref/CanonicalRuleForm"]]\
+, "InlineGuideFunction",
+  TaggingRules->{"PageType" -> "Function"},ExpressionUUID->
+  "5863c6d6-8faa-3648-8054-f356236324f6"],
+ StyleBox[" \[FilledVerySmallSquare] ", "InlineSeparator"],
+ Cell[BoxData[
+  ButtonBox["MultiwayEvolutionGraph",
+   BaseStyle->"Link",
+   ButtonData->
+    "paclet:SamuelFrerichs/StructureAdaptiveEvolution/ref/\
+MultiwayEvolutionGraph"]], "InlineGuideFunction",
+  TaggingRules->{"PageType" -> "Function"},ExpressionUUID->
+  "a9302894-886b-f944-9012-1760ce8e417c"],
+ StyleBox[" \[FilledVerySmallSquare] ", "InlineSeparator"],
+ Cell[BoxData[
+  ButtonBox["BranchialGraphs",
+   BaseStyle->"Link",
+   ButtonData->
+    "paclet:SamuelFrerichs/StructureAdaptiveEvolution/ref/BranchialGraphs"]], 
+  "InlineGuideFunction",
+  TaggingRules->{"PageType" -> "Function"},ExpressionUUID->
+  "315322ff-74f7-884a-962d-8deaa4aea859"],
+ StyleBox[" \[FilledVerySmallSquare] ", "InlineSeparator"],
+ Cell[BoxData[
+  ButtonBox["BranchialGraph",
+   BaseStyle->"Link",
+   ButtonData->
+    "paclet:SamuelFrerichs/StructureAdaptiveEvolution/ref/BranchialGraph"]], 
+  "InlineGuideFunction",
+  TaggingRules->{"PageType" -> "Function"},ExpressionUUID->
+  "fe72e89b-8d5b-bd4a-b724-6116b72a5e4c"],
+ StyleBox[" \[FilledVerySmallSquare] ", "InlineSeparator"],
+ Cell[BoxData[
+  ButtonBox["CanonicalFormSelfTest",
+   BaseStyle->"Link",
+   ButtonData->
+    "paclet:SamuelFrerichs/StructureAdaptiveEvolution/ref/\
+CanonicalFormSelfTest"]], "InlineGuideFunction",
+  TaggingRules->{"PageType" -> "Function"},ExpressionUUID->
+  "cb51c726-d2f1-1647-8a43-3bf512d2edfc"],
+ StyleBox[" \[FilledVerySmallSquare] ", "InlineSeparator"],
+ Cell[BoxData[
+  ButtonBox["hypergraphStateQ",
+   BaseStyle->"Link",
+   ButtonData->
+    "paclet:SamuelFrerichs/StructureAdaptiveEvolution/ref/hypergraphStateQ"]],
+   "InlineGuideFunction",
+  TaggingRules->{"PageType" -> "Function"},ExpressionUUID->
+  "b41ac0a4-a070-d84c-bfd8-00bc384e7cdb"]
+}], "InlineGuideFunctionListing",ExpressionUUID->"23ec69d4-b323-7848-a022-\
+449d71e8362b"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["Termination, confluence and classification", "GuideFunctionsSubsection",ExpressionUUID->"65587a40-b33a-124b-a09e-059aeb241484"],
+
+Cell[TextData[{
+ Cell[BoxData[
+  ButtonBox["ClassifyCandidate",
+   BaseStyle->"Link",
+   ButtonData->
+    "paclet:SamuelFrerichs/StructureAdaptiveEvolution/ref/ClassifyCandidate"]]\
+, "InlineGuideFunction",
+  TaggingRules->{"PageType" -> "Function"},ExpressionUUID->
+  "b29fc9de-204f-3c48-9dce-fce241ac0980"],
+ " \[LongDash] provisional structural labels with three-valued outcomes"
+}], "GuideText",ExpressionUUID->"75ac5e79-787d-194a-b7eb-7d7a9563400f"],
+
+Cell[TextData[{
+ Cell[BoxData[
+  ButtonBox["DefaultClassificationCriteria",
+   BaseStyle->"Link",
+   ButtonData->
+    "paclet:SamuelFrerichs/StructureAdaptiveEvolution/ref/\
+DefaultClassificationCriteria"]], "InlineGuideFunction",
+  TaggingRules->{"PageType" -> "Function"},ExpressionUUID->
+  "4919eb61-1b6f-1d4d-862f-d3bc8d673692"],
+ StyleBox[" \[FilledVerySmallSquare] ", "InlineSeparator"],
+ Cell[BoxData[
+  ButtonBox["Undetermined",
+   BaseStyle->"Link",
+   ButtonData->
+    "paclet:SamuelFrerichs/StructureAdaptiveEvolution/ref/Undetermined"]], 
+  "InlineGuideFunction",
+  TaggingRules->{"PageType" -> "Function"},ExpressionUUID->
+  "f0bf978a-46a6-d743-aacd-10b67fd87d6a"]
+}], "InlineGuideFunctionListing",ExpressionUUID->"7f764e4f-3058-044d-8d8d-\
+58aa2276b2c1"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["Reproducible experiments", "GuideFunctionsSubsection",ExpressionUUID->"62cecc61-1adf-d941-beb9-35a3a5f8abb8"],
+
+Cell[TextData[{
+ Cell[BoxData[
+  ButtonBox["ExportEvolutionResult",
+   BaseStyle->"Link",
+   ButtonData->
+    "paclet:SamuelFrerichs/StructureAdaptiveEvolution/ref/\
+ExportEvolutionResult"]], "InlineGuideFunction",
+  TaggingRules->{"PageType" -> "Function"},ExpressionUUID->
+  "36b81bb4-0d7b-b849-aae2-63dba1e935a2"],
+ " \[LongDash] lossless export with a run manifest"
+}], "GuideText",ExpressionUUID->"281bfd9e-8cb7-f843-a66e-91df07f2b530"],
+
+Cell[TextData[{
+ Cell[BoxData[
+  ButtonBox["ReplicateEvolution",
+   BaseStyle->"Link",
+   ButtonData->
+    "paclet:SamuelFrerichs/StructureAdaptiveEvolution/ref/ReplicateEvolution"]\
+], "InlineGuideFunction",
+  TaggingRules->{"PageType" -> "Function"},ExpressionUUID->
+  "66cac9b8-08d9-a641-8248-a433338c0b61"],
+ " \[LongDash] multi-seed replication with success fractions"
+}], "GuideText",ExpressionUUID->"adc48221-463c-7048-8fec-ac441a115317"],
+
+Cell[TextData[{
+ Cell[BoxData[
+  ButtonBox["BaselineComparison",
+   BaseStyle->"Link",
+   ButtonData->
+    "paclet:SamuelFrerichs/StructureAdaptiveEvolution/ref/BaselineComparison"]\
+], "InlineGuideFunction",
+  TaggingRules->{"PageType" -> "Function"},ExpressionUUID->
+  "85c297ec-38e3-5d44-bb5d-a05fd98b140f"],
+ " \[LongDash] guided, random and exhaustive search at matched budgets"
+}], "GuideText",ExpressionUUID->"ff4db55c-f2e9-a74a-977e-74ed0d975c8d"],
+
+Cell[TextData[{
+ Cell[BoxData[
+  ButtonBox["DiscoveryReport",
+   BaseStyle->"Link",
+   ButtonData->
+    "paclet:SamuelFrerichs/StructureAdaptiveEvolution/ref/DiscoveryReport"]], 
+  "InlineGuideFunction",
+  TaggingRules->{"PageType" -> "Function"},ExpressionUUID->
+  "d71444a0-3a51-7b4b-a432-395df3493db9"],
+ " \[LongDash] the discovery-report template with claim discipline"
+}], "GuideText",ExpressionUUID->"546047bd-54c1-f04f-a3e2-067d460afe99"],
+
+Cell[TextData[{
+ Cell[BoxData[
+  ButtonBox["ImportEvolutionResult",
+   BaseStyle->"Link",
+   ButtonData->
+    "paclet:SamuelFrerichs/StructureAdaptiveEvolution/ref/\
+ImportEvolutionResult"]], "InlineGuideFunction",
+  TaggingRules->{"PageType" -> "Function"},ExpressionUUID->
+  "b580bd8b-b4d8-aa4c-b988-36d296912ae9"],
+ StyleBox[" \[FilledVerySmallSquare] ", "InlineSeparator"],
+ Cell[BoxData[
+  ButtonBox["ExperimentStoreAdd",
+   BaseStyle->"Link",
+   ButtonData->
+    "paclet:SamuelFrerichs/StructureAdaptiveEvolution/ref/ExperimentStoreAdd"]\
+], "InlineGuideFunction",
+  TaggingRules->{"PageType" -> "Function"},ExpressionUUID->
+  "d637f9cb-1e7e-7344-b147-efe33c4bce12"],
+ StyleBox[" \[FilledVerySmallSquare] ", "InlineSeparator"],
+ Cell[BoxData[
+  ButtonBox["ExperimentStoreRuns",
+   BaseStyle->"Link",
+   ButtonData->
+    "paclet:SamuelFrerichs/StructureAdaptiveEvolution/ref/\
+ExperimentStoreRuns"]], "InlineGuideFunction",
+  TaggingRules->{"PageType" -> "Function"},ExpressionUUID->
+  "3cfa934e-dcc2-1149-b009-f932f2ba17e1"],
+ StyleBox[" \[FilledVerySmallSquare] ", "InlineSeparator"],
+ Cell[BoxData[
+  ButtonBox["ExperimentStoreQuery",
+   BaseStyle->"Link",
+   ButtonData->
+    "paclet:SamuelFrerichs/StructureAdaptiveEvolution/ref/\
+ExperimentStoreQuery"]], "InlineGuideFunction",
+  TaggingRules->{"PageType" -> "Function"},ExpressionUUID->
+  "5c1d2a89-80f5-844f-86b2-6cc14adb89de"],
+ StyleBox[" \[FilledVerySmallSquare] ", "InlineSeparator"],
+ Cell[BoxData[
+  ButtonBox["ExperimentStoreLoad",
+   BaseStyle->"Link",
+   ButtonData->
+    "paclet:SamuelFrerichs/StructureAdaptiveEvolution/ref/\
+ExperimentStoreLoad"]], "InlineGuideFunction",
+  TaggingRules->{"PageType" -> "Function"},ExpressionUUID->
+  "2fd0c1e2-c71e-b74f-9442-5b3af2ff9b28"],
+ StyleBox[" \[FilledVerySmallSquare] ", "InlineSeparator"],
+ Cell[BoxData[
+  ButtonBox["ExperimentStorePreload",
+   BaseStyle->"Link",
+   ButtonData->
+    "paclet:SamuelFrerichs/StructureAdaptiveEvolution/ref/\
+ExperimentStorePreload"]], "InlineGuideFunction",
+  TaggingRules->{"PageType" -> "Function"},ExpressionUUID->
+  "2d1c338b-1db8-344b-8a78-765cf400f809"],
+ StyleBox[" \[FilledVerySmallSquare] ", "InlineSeparator"],
+ Cell[BoxData[
+  ButtonBox["ClearPreloadedEvaluations",
+   BaseStyle->"Link",
+   ButtonData->
+    "paclet:SamuelFrerichs/StructureAdaptiveEvolution/ref/\
+ClearPreloadedEvaluations"]], "InlineGuideFunction",
+  TaggingRules->{"PageType" -> "Function"},ExpressionUUID->
+  "3d65d52b-cffa-594b-b966-8fa3d27015a1"],
+ StyleBox[" \[FilledVerySmallSquare] ", "InlineSeparator"],
+ Cell[BoxData[
+  ButtonBox["WilsonInterval",
+   BaseStyle->"Link",
+   ButtonData->
+    "paclet:SamuelFrerichs/StructureAdaptiveEvolution/ref/WilsonInterval"]], 
+  "InlineGuideFunction",
+  TaggingRules->{"PageType" -> "Function"},ExpressionUUID->
+  "bda18b77-bee3-4840-b8d9-11fba8f17961"],
+ StyleBox[" \[FilledVerySmallSquare] ", "InlineSeparator"],
+ Cell[BoxData[
+  ButtonBox["CandidateRobustness",
+   BaseStyle->"Link",
+   ButtonData->
+    "paclet:SamuelFrerichs/StructureAdaptiveEvolution/ref/\
+CandidateRobustness"]], "InlineGuideFunction",
+  TaggingRules->{"PageType" -> "Function"},ExpressionUUID->
+  "35f1b1c0-4689-1840-aeb6-29e944953f7b"],
+ StyleBox[" \[FilledVerySmallSquare] ", "InlineSeparator"],
+ Cell[BoxData[
+  ButtonBox["RobustnessReport",
+   BaseStyle->"Link",
+   ButtonData->
+    "paclet:SamuelFrerichs/StructureAdaptiveEvolution/ref/RobustnessReport"]],
+   "InlineGuideFunction",
+  TaggingRules->{"PageType" -> "Function"},ExpressionUUID->
+  "07e557bb-7664-4e4f-80d3-e8f7a4e13af3"],
+ StyleBox[" \[FilledVerySmallSquare] ", "InlineSeparator"],
+ Cell[BoxData[
+  ButtonBox["SeedCorpus",
+   BaseStyle->"Link",
+   ButtonData->
+    "paclet:SamuelFrerichs/StructureAdaptiveEvolution/ref/SeedCorpus"]], 
+  "InlineGuideFunction",
+  TaggingRules->{"PageType" -> "Function"},ExpressionUUID->
+  "4a9e2927-ad69-2c45-9cbe-8f1f73e9f605"],
+ StyleBox[" \[FilledVerySmallSquare] ", "InlineSeparator"],
+ Cell[BoxData[
+  ButtonBox["VerifySeedCorpus",
+   BaseStyle->"Link",
+   ButtonData->
+    "paclet:SamuelFrerichs/StructureAdaptiveEvolution/ref/VerifySeedCorpus"]],
+   "InlineGuideFunction",
+  TaggingRules->{"PageType" -> "Function"},ExpressionUUID->
+  "e30b658f-c488-f54a-bbad-34c2216daeb0"]
+}], "InlineGuideFunctionListing",ExpressionUUID->"9cd0e3f0-fe94-fd45-baa2-\
+76d127f7dd12"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["Visualizing results", "GuideFunctionsSubsection",ExpressionUUID->"c69f774e-be8a-fe46-9201-f019e4cef6e8"],
+
+Cell[TextData[{
+ Cell[BoxData[
+  ButtonBox["EvolutionDashboard",
+   BaseStyle->"Link",
+   ButtonData->
+    "paclet:SamuelFrerichs/StructureAdaptiveEvolution/ref/EvolutionDashboard"]\
+], "InlineGuideFunction",
+  TaggingRules->{"PageType" -> "Function"},ExpressionUUID->
+  "ad150e92-cfc8-3142-8e3e-8b74f859719a"],
+ " \[LongDash] tabbed overview of a result, built from stored data only"
+}], "GuideText",ExpressionUUID->"160ca930-3fbe-3f43-89e9-b529ee6faefa"],
+
+Cell[TextData[{
+ Cell[BoxData[
+  ButtonBox["EvolutionSummaryTable",
+   BaseStyle->"Link",
+   ButtonData->
+    "paclet:SamuelFrerichs/StructureAdaptiveEvolution/ref/\
+EvolutionSummaryTable"]], "InlineGuideFunction",
+  TaggingRules->{"PageType" -> "Function"},ExpressionUUID->
+  "097d9085-1576-8840-b865-1344c8ce054d"],
+ StyleBox[" \[FilledVerySmallSquare] ", "InlineSeparator"],
+ Cell[BoxData[
+  ButtonBox["ParetoFrontPlot",
+   BaseStyle->"Link",
+   ButtonData->
+    "paclet:SamuelFrerichs/StructureAdaptiveEvolution/ref/ParetoFrontPlot"]], 
+  "InlineGuideFunction",
+  TaggingRules->{"PageType" -> "Function"},ExpressionUUID->
+  "e8cded93-37e6-3840-9edf-f56850b59b09"],
+ StyleBox[" \[FilledVerySmallSquare] ", "InlineSeparator"],
+ Cell[BoxData[
+  ButtonBox["RuleLineageGraph",
+   BaseStyle->"Link",
+   ButtonData->
+    "paclet:SamuelFrerichs/StructureAdaptiveEvolution/ref/RuleLineageGraph"]],
+   "InlineGuideFunction",
+  TaggingRules->{"PageType" -> "Function"},ExpressionUUID->
+  "6a463633-a8ed-874d-94ac-365bea102d87"],
+ StyleBox[" \[FilledVerySmallSquare] ", "InlineSeparator"],
+ Cell[BoxData[
+  ButtonBox["CandidateEvolutionPlot",
+   BaseStyle->"Link",
+   ButtonData->
+    "paclet:SamuelFrerichs/StructureAdaptiveEvolution/ref/\
+CandidateEvolutionPlot"]], "InlineGuideFunction",
+  TaggingRules->{"PageType" -> "Function"},ExpressionUUID->
+  "16af5eaf-2d68-6146-abad-6100b2c73b19"],
+ StyleBox[" \[FilledVerySmallSquare] ", "InlineSeparator"],
+ Cell[BoxData[
+  ButtonBox["FitnessTrajectoryPlot",
+   BaseStyle->"Link",
+   ButtonData->
+    "paclet:SamuelFrerichs/StructureAdaptiveEvolution/ref/\
+FitnessTrajectoryPlot"]], "InlineGuideFunction",
+  TaggingRules->{"PageType" -> "Function"},ExpressionUUID->
+  "c8627ae3-118c-8247-bad7-243fc74bebd8"],
+ StyleBox[" \[FilledVerySmallSquare] ", "InlineSeparator"],
+ Cell[BoxData[
+  ButtonBox["StrategyWeightPlot",
+   BaseStyle->"Link",
+   ButtonData->
+    "paclet:SamuelFrerichs/StructureAdaptiveEvolution/ref/StrategyWeightPlot"]\
+], "InlineGuideFunction",
+  TaggingRules->{"PageType" -> "Function"},ExpressionUUID->
+  "77afd178-b738-6945-966d-246e4bf5b197"],
+ StyleBox[" \[FilledVerySmallSquare] ", "InlineSeparator"],
+ Cell[BoxData[
+  ButtonBox["FrontHistoryPlot",
+   BaseStyle->"Link",
+   ButtonData->
+    "paclet:SamuelFrerichs/StructureAdaptiveEvolution/ref/FrontHistoryPlot"]],
+   "InlineGuideFunction",
+  TaggingRules->{"PageType" -> "Function"},ExpressionUUID->
+  "fc40fb7a-be82-ac4f-868a-f692c2e0b47b"]
+}], "InlineGuideFunctionListing",ExpressionUUID->"232cbc54-a234-9247-8b96-\
+29611caacfa1"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["Mutation operators", "GuideFunctionsSubsection",ExpressionUUID->"4d91c895-916d-e445-a46e-45624942547a"],
+
+Cell[TextData[{
+ Cell[BoxData[
+  ButtonBox["GrowthBudgetMutation",
+   BaseStyle->"Link",
+   ButtonData->
+    "paclet:SamuelFrerichs/StructureAdaptiveEvolution/ref/\
+GrowthBudgetMutation"]], "InlineGuideFunction",
+  TaggingRules->{"PageType" -> "Function"},ExpressionUUID->
+  "f3df8b36-24a7-8849-ae45-1abf11c72882"],
+ StyleBox[" \[FilledVerySmallSquare] ", "InlineSeparator"],
+ Cell[BoxData[
+  ButtonBox["GrowThenConstrainMutation",
+   BaseStyle->"Link",
+   ButtonData->
+    "paclet:SamuelFrerichs/StructureAdaptiveEvolution/ref/\
+GrowThenConstrainMutation"]], "InlineGuideFunction",
+  TaggingRules->{"PageType" -> "Function"},ExpressionUUID->
+  "91413b15-c61c-e147-af7b-24acc9f678d6"],
+ StyleBox[" \[FilledVerySmallSquare] ", "InlineSeparator"],
+ Cell[BoxData[
+  ButtonBox["OverlappingMatchMutation",
+   BaseStyle->"Link",
+   ButtonData->
+    "paclet:SamuelFrerichs/StructureAdaptiveEvolution/ref/\
+OverlappingMatchMutation"]], "InlineGuideFunction",
+  TaggingRules->{"PageType" -> "Function"},ExpressionUUID->
+  "351b2906-38d7-a348-9b67-bd74d1a7d8b3"],
+ StyleBox[" \[FilledVerySmallSquare] ", "InlineSeparator"],
+ Cell[BoxData[
+  ButtonBox["DelayedTerminationMutation",
+   BaseStyle->"Link",
+   ButtonData->
+    "paclet:SamuelFrerichs/StructureAdaptiveEvolution/ref/\
+DelayedTerminationMutation"]], "InlineGuideFunction",
+  TaggingRules->{"PageType" -> "Function"},ExpressionUUID->
+  "f1d7a387-ef7a-644c-8421-82c82701d538"],
+ StyleBox[" \[FilledVerySmallSquare] ", "InlineSeparator"],
+ Cell[BoxData[
+  ButtonBox["RuntimeThrottlingMutation",
+   BaseStyle->"Link",
+   ButtonData->
+    "paclet:SamuelFrerichs/StructureAdaptiveEvolution/ref/\
+RuntimeThrottlingMutation"]], "InlineGuideFunction",
+  TaggingRules->{"PageType" -> "Function"},ExpressionUUID->
+  "17a18feb-d025-9242-b2ac-381b62a425b0"],
+ StyleBox[" \[FilledVerySmallSquare] ", "InlineSeparator"],
+ Cell[BoxData[
+  ButtonBox["AddLHSConditionMutation",
+   BaseStyle->"Link",
+   ButtonData->
+    "paclet:SamuelFrerichs/StructureAdaptiveEvolution/ref/\
+AddLHSConditionMutation"]], "InlineGuideFunction",
+  TaggingRules->{"PageType" -> "Function"},ExpressionUUID->
+  "0b4b45f8-cc12-e543-a337-c626f7f9fdd2"],
+ StyleBox[" \[FilledVerySmallSquare] ", "InlineSeparator"],
+ Cell[BoxData[
+  ButtonBox["IdentifyVariablesMutation",
+   BaseStyle->"Link",
+   ButtonData->
+    "paclet:SamuelFrerichs/StructureAdaptiveEvolution/ref/\
+IdentifyVariablesMutation"]], "InlineGuideFunction",
+  TaggingRules->{"PageType" -> "Function"},ExpressionUUID->
+  "47af70f1-1f02-414f-8128-a990109845f1"],
+ StyleBox[" \[FilledVerySmallSquare] ", "InlineSeparator"],
+ Cell[BoxData[
+  ButtonBox["SplitVariableMutation",
+   BaseStyle->"Link",
+   ButtonData->
+    "paclet:SamuelFrerichs/StructureAdaptiveEvolution/ref/\
+SplitVariableMutation"]], "InlineGuideFunction",
+  TaggingRules->{"PageType" -> "Function"},ExpressionUUID->
+  "da9e9149-f30e-2f40-8634-101f8cb99ee2"],
+ StyleBox[" \[FilledVerySmallSquare] ", "InlineSeparator"],
+ Cell[BoxData[
+  ButtonBox["VariableRewiringMutation",
+   BaseStyle->"Link",
+   ButtonData->
+    "paclet:SamuelFrerichs/StructureAdaptiveEvolution/ref/\
+VariableRewiringMutation"]], "InlineGuideFunction",
+  TaggingRules->{"PageType" -> "Function"},ExpressionUUID->
+  "1b32a253-6ea6-8e49-a20f-a8c36cf9105b"],
+ StyleBox[" \[FilledVerySmallSquare] ", "InlineSeparator"],
+ Cell[BoxData[
+  ButtonBox["OrderedEdgePermutationMutation",
+   BaseStyle->"Link",
+   ButtonData->
+    "paclet:SamuelFrerichs/StructureAdaptiveEvolution/ref/\
+OrderedEdgePermutationMutation"]], "InlineGuideFunction",
+  TaggingRules->{"PageType" -> "Function"},ExpressionUUID->
+  "72c0d8e6-8cd9-6149-b8cb-6617a178dd57"]
+}], "InlineGuideFunctionListing",ExpressionUUID->"36a892af-bb14-0649-a4c9-\
+8749bbe701d0"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["Catalog strategies 3\[Dash]15 (opt-in)", "GuideFunctionsSubsection",ExpressionUUID->"3dfd3261-77ca-4941-a61c-7770cc33cda7"],
+
+Cell[TextData[{
+ Cell[BoxData[
+  ButtonBox["SymmetryConfluenceMutation",
+   BaseStyle->"Link",
+   ButtonData->
+    "paclet:SamuelFrerichs/StructureAdaptiveEvolution/ref/\
+SymmetryConfluenceMutation"]], "InlineGuideFunction",
+  TaggingRules->{"PageType" -> "Function"},ExpressionUUID->
+  "8a5c11a2-5a9a-7445-a945-d48472808b11"],
+ StyleBox[" \[FilledVerySmallSquare] ", "InlineSeparator"],
+ Cell[BoxData[
+  ButtonBox["BoundaryPreservationMutation",
+   BaseStyle->"Link",
+   ButtonData->
+    "paclet:SamuelFrerichs/StructureAdaptiveEvolution/ref/\
+BoundaryPreservationMutation"]], "InlineGuideFunction",
+  TaggingRules->{"PageType" -> "Function"},ExpressionUUID->
+  "654e4963-ac97-5440-96d4-4ddaef3bf113"],
+ StyleBox[" \[FilledVerySmallSquare] ", "InlineSeparator"],
+ Cell[BoxData[
+  ButtonBox["TerminalDiversityMutation",
+   BaseStyle->"Link",
+   ButtonData->
+    "paclet:SamuelFrerichs/StructureAdaptiveEvolution/ref/\
+TerminalDiversityMutation"]], "InlineGuideFunction",
+  TaggingRules->{"PageType" -> "Function"},ExpressionUUID->
+  "d268b3fb-3316-074e-a8db-dfb622ff82d4"],
+ StyleBox[" \[FilledVerySmallSquare] ", "InlineSeparator"],
+ Cell[BoxData[
+  ButtonBox["MeshDensityMutation",
+   BaseStyle->"Link",
+   ButtonData->
+    "paclet:SamuelFrerichs/StructureAdaptiveEvolution/ref/\
+MeshDensityMutation"]], "InlineGuideFunction",
+  TaggingRules->{"PageType" -> "Function"},ExpressionUUID->
+  "9c4d2766-7e04-3642-aacb-03c95616e404"],
+ StyleBox[" \[FilledVerySmallSquare] ", "InlineSeparator"],
+ Cell[BoxData[
+  ButtonBox["HomogenizingMutation",
+   BaseStyle->"Link",
+   ButtonData->
+    "paclet:SamuelFrerichs/StructureAdaptiveEvolution/ref/\
+HomogenizingMutation"]], "InlineGuideFunction",
+  TaggingRules->{"PageType" -> "Function"},ExpressionUUID->
+  "eb1deb89-c539-794e-809a-9865c1a10a8f"],
+ StyleBox[" \[FilledVerySmallSquare] ", "InlineSeparator"],
+ Cell[BoxData[
+  ButtonBox["LocalStabilityMutation",
+   BaseStyle->"Link",
+   ButtonData->
+    "paclet:SamuelFrerichs/StructureAdaptiveEvolution/ref/\
+LocalStabilityMutation"]], "InlineGuideFunction",
+  TaggingRules->{"PageType" -> "Function"},ExpressionUUID->
+  "3dc5c951-824b-4845-ae07-d9a979b6dc13"],
+ StyleBox[" \[FilledVerySmallSquare] ", "InlineSeparator"],
+ Cell[BoxData[
+  ButtonBox["DegreeBalancingMutation",
+   BaseStyle->"Link",
+   ButtonData->
+    "paclet:SamuelFrerichs/StructureAdaptiveEvolution/ref/\
+DegreeBalancingMutation"]], "InlineGuideFunction",
+  TaggingRules->{"PageType" -> "Function"},ExpressionUUID->
+  "9127fc97-027a-2d46-a8e2-4013a24992e6"],
+ StyleBox[" \[FilledVerySmallSquare] ", "InlineSeparator"],
+ Cell[BoxData[
+  ButtonBox["HubSeedingMutation",
+   BaseStyle->"Link",
+   ButtonData->
+    "paclet:SamuelFrerichs/StructureAdaptiveEvolution/ref/HubSeedingMutation"]\
+], "InlineGuideFunction",
+  TaggingRules->{"PageType" -> "Function"},ExpressionUUID->
+  "d8893f67-defb-224a-9595-f1f100b1921c"],
+ StyleBox[" \[FilledVerySmallSquare] ", "InlineSeparator"],
+ Cell[BoxData[
+  ButtonBox["HubPruningMutation",
+   BaseStyle->"Link",
+   ButtonData->
+    "paclet:SamuelFrerichs/StructureAdaptiveEvolution/ref/HubPruningMutation"]\
+], "InlineGuideFunction",
+  TaggingRules->{"PageType" -> "Function"},ExpressionUUID->
+  "c0d120f0-78b7-9f49-865a-7408285cdff9"],
+ StyleBox[" \[FilledVerySmallSquare] ", "InlineSeparator"],
+ Cell[BoxData[
+  ButtonBox["CausalInvarianceStyleMutation",
+   BaseStyle->"Link",
+   ButtonData->
+    "paclet:SamuelFrerichs/StructureAdaptiveEvolution/ref/\
+CausalInvarianceStyleMutation"]], "InlineGuideFunction",
+  TaggingRules->{"PageType" -> "Function"},ExpressionUUID->
+  "1acffc4a-018b-814c-ae81-152552c1e730"]
+}], "InlineGuideFunctionListing",ExpressionUUID->"91c0e053-2d26-b647-9071-\
+d6fb11ef59ff"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["Structural metrics", "GuideFunctionsSubsection",ExpressionUUID->"3b1506ba-6ab4-ca48-853b-0fdd057fb012"],
+
+Cell[TextData[{
+ Cell[BoxData[
+  ButtonBox["ComponentMetrics",
+   BaseStyle->"Link",
+   ButtonData->
+    "paclet:SamuelFrerichs/StructureAdaptiveEvolution/ref/ComponentMetrics"]],
+   "InlineGuideFunction",
+  TaggingRules->{"PageType" -> "Function"},ExpressionUUID->
+  "194b95f3-f0cf-814b-b9d7-505a429846dd"],
+ StyleBox[" \[FilledVerySmallSquare] ", "InlineSeparator"],
+ Cell[BoxData[
+  ButtonBox["DegreeMetrics",
+   BaseStyle->"Link",
+   ButtonData->
+    "paclet:SamuelFrerichs/StructureAdaptiveEvolution/ref/DegreeMetrics"]], 
+  "InlineGuideFunction",
+  TaggingRules->{"PageType" -> "Function"},ExpressionUUID->
+  "2e87177c-0018-7b4f-b11d-a4cc084306e6"],
+ StyleBox[" \[FilledVerySmallSquare] ", "InlineSeparator"],
+ Cell[BoxData[
+  ButtonBox["EffectiveDimensionEstimate",
+   BaseStyle->"Link",
+   ButtonData->
+    "paclet:SamuelFrerichs/StructureAdaptiveEvolution/ref/\
+EffectiveDimensionEstimate"]], "InlineGuideFunction",
+  TaggingRules->{"PageType" -> "Function"},ExpressionUUID->
+  "63fe328d-ffe1-6d49-bcb7-a961206ee807"],
+ StyleBox[" \[FilledVerySmallSquare] ", "InlineSeparator"],
+ Cell[BoxData[
+  ButtonBox["DimensionVariance",
+   BaseStyle->"Link",
+   ButtonData->
+    "paclet:SamuelFrerichs/StructureAdaptiveEvolution/ref/DimensionVariance"]]\
+, "InlineGuideFunction",
+  TaggingRules->{"PageType" -> "Function"},ExpressionUUID->
+  "f0c5316f-c478-9f4d-aef7-3fa5812e5d89"],
+ StyleBox[" \[FilledVerySmallSquare] ", "InlineSeparator"],
+ Cell[BoxData[
+  ButtonBox["BranchingUncertainty",
+   BaseStyle->"Link",
+   ButtonData->
+    "paclet:SamuelFrerichs/StructureAdaptiveEvolution/ref/\
+BranchingUncertainty"]], "InlineGuideFunction",
+  TaggingRules->{"PageType" -> "Function"},ExpressionUUID->
+  "8131c2a6-d5ca-194f-9afc-c2756d1a1fd4"],
+ StyleBox[" \[FilledVerySmallSquare] ", "InlineSeparator"],
+ Cell[BoxData[
+  ButtonBox["ReconvergenceMetrics",
+   BaseStyle->"Link",
+   ButtonData->
+    "paclet:SamuelFrerichs/StructureAdaptiveEvolution/ref/\
+ReconvergenceMetrics"]], "InlineGuideFunction",
+  TaggingRules->{"PageType" -> "Function"},ExpressionUUID->
+  "68e3ca56-a57c-164b-aabc-6eb943bb517f"],
+ StyleBox[" \[FilledVerySmallSquare] ", "InlineSeparator"],
+ Cell[BoxData[
+  ButtonBox["ReconvergenceReport",
+   BaseStyle->"Link",
+   ButtonData->
+    "paclet:SamuelFrerichs/StructureAdaptiveEvolution/ref/\
+ReconvergenceReport"]], "InlineGuideFunction",
+  TaggingRules->{"PageType" -> "Function"},ExpressionUUID->
+  "ed53c959-5d9e-2643-a659-7065593f9334"],
+ StyleBox[" \[FilledVerySmallSquare] ", "InlineSeparator"],
+ Cell[BoxData[
+  ButtonBox["CausalMergeEvents",
+   BaseStyle->"Link",
+   ButtonData->
+    "paclet:SamuelFrerichs/StructureAdaptiveEvolution/ref/CausalMergeEvents"]]\
+, "InlineGuideFunction",
+  TaggingRules->{"PageType" -> "Function"},ExpressionUUID->
+  "2f03d671-e511-8c45-8537-cdcd9d48a441"],
+ StyleBox[" \[FilledVerySmallSquare] ", "InlineSeparator"],
+ Cell[BoxData[
+  ButtonBox["CausalDependencyEntropy",
+   BaseStyle->"Link",
+   ButtonData->
+    "paclet:SamuelFrerichs/StructureAdaptiveEvolution/ref/\
+CausalDependencyEntropy"]], "InlineGuideFunction",
+  TaggingRules->{"PageType" -> "Function"},ExpressionUUID->
+  "49dc64e8-e370-0848-9c9f-671647150c6f"],
+ StyleBox[" \[FilledVerySmallSquare] ", "InlineSeparator"],
+ Cell[BoxData[
+  ButtonBox["HypergraphBasicSizeMetrics",
+   BaseStyle->"Link",
+   ButtonData->
+    "paclet:SamuelFrerichs/StructureAdaptiveEvolution/ref/\
+HypergraphBasicSizeMetrics"]], "InlineGuideFunction",
+  TaggingRules->{"PageType" -> "Function"},ExpressionUUID->
+  "48fbf945-4a20-8c46-b4cb-7bc4e0de6038"],
+ StyleBox[" \[FilledVerySmallSquare] ", "InlineSeparator"],
+ Cell[BoxData[
+  ButtonBox["FinalStateSizeMetrics",
+   BaseStyle->"Link",
+   ButtonData->
+    "paclet:SamuelFrerichs/StructureAdaptiveEvolution/ref/\
+FinalStateSizeMetrics"]], "InlineGuideFunction",
+  TaggingRules->{"PageType" -> "Function"},ExpressionUUID->
+  "b14891ec-e822-0b4f-ac2d-caf96c9e66d2"],
+ StyleBox[" \[FilledVerySmallSquare] ", "InlineSeparator"],
+ Cell[BoxData[
+  ButtonBox["MultiwayFinalStateSizeMetrics",
+   BaseStyle->"Link",
+   ButtonData->
+    "paclet:SamuelFrerichs/StructureAdaptiveEvolution/ref/\
+MultiwayFinalStateSizeMetrics"]], "InlineGuideFunction",
+  TaggingRules->{"PageType" -> "Function"},ExpressionUUID->
+  "1e008ec0-2bf6-7544-b3ef-db40e907e717"]
+}], "InlineGuideFunctionListing",ExpressionUUID->"a7cfc564-3b67-1e4f-b950-\
+96c863d12931"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["Version 1 standalone tools", "GuideFunctionsSubsection",ExpressionUUID->"4a4a7087-98bb-f049-b3f7-63231fc486ab"],
+
+Cell[TextData[{
+ Cell[BoxData[
+  ButtonBox["HypergraphRuntimeAndLifetime",
+   BaseStyle->"Link",
+   ButtonData->
+    "paclet:SamuelFrerichs/StructureAdaptiveEvolution/ref/\
+HypergraphRuntimeAndLifetime"]], "InlineGuideFunction",
+  TaggingRules->{"PageType" -> "Function"},ExpressionUUID->
+  "bbaa4483-e655-bc4b-a4f4-5725f60ebcca"],
+ StyleBox[" \[FilledVerySmallSquare] ", "InlineSeparator"],
+ Cell[BoxData[
+  ButtonBox["MWHypergraphLifetime",
+   BaseStyle->"Link",
+   ButtonData->
+    "paclet:SamuelFrerichs/StructureAdaptiveEvolution/ref/\
+MWHypergraphLifetime"]], "InlineGuideFunction",
+  TaggingRules->{"PageType" -> "Function"},ExpressionUUID->
+  "6fb68a5c-904f-d94e-95ac-b706d98c049b"],
+ StyleBox[" \[FilledVerySmallSquare] ", "InlineSeparator"],
+ Cell[BoxData[
+  ButtonBox["MWHypergraphRuntimeAndLifetime",
+   BaseStyle->"Link",
+   ButtonData->
+    "paclet:SamuelFrerichs/StructureAdaptiveEvolution/ref/\
+MWHypergraphRuntimeAndLifetime"]], "InlineGuideFunction",
+  TaggingRules->{"PageType" -> "Function"},ExpressionUUID->
+  "be2738f2-f2ef-2846-a43a-b0fd7052b271"],
+ StyleBox[" \[FilledVerySmallSquare] ", "InlineSeparator"],
+ Cell[BoxData[
+  ButtonBox["GrowthBudgetStep",
+   BaseStyle->"Link",
+   ButtonData->
+    "paclet:SamuelFrerichs/StructureAdaptiveEvolution/ref/GrowthBudgetStep"]],
+   "InlineGuideFunction",
+  TaggingRules->{"PageType" -> "Function"},ExpressionUUID->
+  "2a00a784-c0de-634a-a7b0-f74b6e3c3db0"],
+ StyleBox[" \[FilledVerySmallSquare] ", "InlineSeparator"],
+ Cell[BoxData[
+  ButtonBox["RunGrowthBudgetMutations",
+   BaseStyle->"Link",
+   ButtonData->
+    "paclet:SamuelFrerichs/StructureAdaptiveEvolution/ref/\
+RunGrowthBudgetMutations"]], "InlineGuideFunction",
+  TaggingRules->{"PageType" -> "Function"},ExpressionUUID->
+  "d5fba4ac-72c1-864f-8573-abe6a9113aed"],
+ StyleBox[" \[FilledVerySmallSquare] ", "InlineSeparator"],
+ Cell[BoxData[
+  ButtonBox["GrowThenConstrainStep",
+   BaseStyle->"Link",
+   ButtonData->
+    "paclet:SamuelFrerichs/StructureAdaptiveEvolution/ref/\
+GrowThenConstrainStep"]], "InlineGuideFunction",
+  TaggingRules->{"PageType" -> "Function"},ExpressionUUID->
+  "75f83113-ff0d-494a-8d68-2916afd8802c"],
+ StyleBox[" \[FilledVerySmallSquare] ", "InlineSeparator"],
+ Cell[BoxData[
+  ButtonBox["RunGrowThenConstrainMutations",
+   BaseStyle->"Link",
+   ButtonData->
+    "paclet:SamuelFrerichs/StructureAdaptiveEvolution/ref/\
+RunGrowThenConstrainMutations"]], "InlineGuideFunction",
+  TaggingRules->{"PageType" -> "Function"},ExpressionUUID->
+  "e62e3e14-043c-1b44-a07b-451e529897cb"],
+ StyleBox[" \[FilledVerySmallSquare] ", "InlineSeparator"],
+ Cell[BoxData[
+  ButtonBox["OverlappingMatchStep",
+   BaseStyle->"Link",
+   ButtonData->
+    "paclet:SamuelFrerichs/StructureAdaptiveEvolution/ref/\
+OverlappingMatchStep"]], "InlineGuideFunction",
+  TaggingRules->{"PageType" -> "Function"},ExpressionUUID->
+  "e7537d3a-0556-6348-a32f-c84a78a92c3c"],
+ StyleBox[" \[FilledVerySmallSquare] ", "InlineSeparator"],
+ Cell[BoxData[
+  ButtonBox["RunOverlappingMatchMutations",
+   BaseStyle->"Link",
+   ButtonData->
+    "paclet:SamuelFrerichs/StructureAdaptiveEvolution/ref/\
+RunOverlappingMatchMutations"]], "InlineGuideFunction",
+  TaggingRules->{"PageType" -> "Function"},ExpressionUUID->
+  "5312780e-18d5-454f-b9e4-adc678b98e29"],
+ StyleBox[" \[FilledVerySmallSquare] ", "InlineSeparator"],
+ Cell[BoxData[
+  ButtonBox["DelayedTerminationStep",
+   BaseStyle->"Link",
+   ButtonData->
+    "paclet:SamuelFrerichs/StructureAdaptiveEvolution/ref/\
+DelayedTerminationStep"]], "InlineGuideFunction",
+  TaggingRules->{"PageType" -> "Function"},ExpressionUUID->
+  "fa95d4d1-7fc8-d545-b9af-159b5bd5b8a2"],
+ StyleBox[" \[FilledVerySmallSquare] ", "InlineSeparator"],
+ Cell[BoxData[
+  ButtonBox["RunDelayedTerminationMutations",
+   BaseStyle->"Link",
+   ButtonData->
+    "paclet:SamuelFrerichs/StructureAdaptiveEvolution/ref/\
+RunDelayedTerminationMutations"]], "InlineGuideFunction",
+  TaggingRules->{"PageType" -> "Function"},ExpressionUUID->
+  "826fcb37-23fb-4d4e-a51d-c505bebf3c84"],
+ StyleBox[" \[FilledVerySmallSquare] ", "InlineSeparator"],
+ Cell[BoxData[
+  ButtonBox["RuntimeThrottlingStep",
+   BaseStyle->"Link",
+   ButtonData->
+    "paclet:SamuelFrerichs/StructureAdaptiveEvolution/ref/\
+RuntimeThrottlingStep"]], "InlineGuideFunction",
+  TaggingRules->{"PageType" -> "Function"},ExpressionUUID->
+  "1b5018e7-ccb0-f740-9548-0243badb7144"],
+ StyleBox[" \[FilledVerySmallSquare] ", "InlineSeparator"],
+ Cell[BoxData[
+  ButtonBox["RunRuntimeThrottlingMutations",
+   BaseStyle->"Link",
+   ButtonData->
+    "paclet:SamuelFrerichs/StructureAdaptiveEvolution/ref/\
+RunRuntimeThrottlingMutations"]], "InlineGuideFunction",
+  TaggingRules->{"PageType" -> "Function"},ExpressionUUID->
+  "92b7c3aa-2bed-5842-9285-27aa021e0e3e"]
+}], "InlineGuideFunctionListing",ExpressionUUID->"ba6fe0e2-4483-eb4e-ac49-\
+fbf9bf018a8d"]
+}, Open  ]]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["Tech Notes", "GuideTutorialsSection",ExpressionUUID->"44109dae-5baf-ec4f-a171-e2a5cc33ce26"],
+
+Cell[TextData[ButtonBox["Adaptive search over hypergraph rewriting rules",
+ BaseStyle->"Link",
+ ButtonData->
+  "paclet:SamuelFrerichs/StructureAdaptiveEvolution/tutorial/\
+AdaptiveSearchOverHypergraphRewritingRules"]], "GuideTutorial",ExpressionUUID->\
+"44eb196a-f326-2c40-bdb3-0a858210729e"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["Related Links", "GuideRelatedLinksSection",ExpressionUUID->"a7ae42fc-683b-de4b-a196-f418f903250f"],
+
+Cell[TextData[ButtonBox["Wolfram Physics Project",
+ BaseStyle->"Hyperlink",
+ ButtonData->{
+   URL["https://www.wolframphysics.org/"], None}]], "GuideRelatedLinks",Expres\
+sionUUID->"dfed003f-d01c-7144-9a97-15b45be78e47"]
+}, Open  ]]
+},
+TaggingRules-><|"Paclet" -> "SamuelFrerichs/StructureAdaptiveEvolution"|>,
+FrontEndVersion->"15.0 for Microsoft Windows (64-bit) (July 2, 2026)",
+StyleDefinitions->FrontEnd`FileName[{"Wolfram"}, "GuidePageStylesExt.nb", 
+  CharacterEncoding -> "UTF-8"],
+ExpressionUUID->"f03cd8b3-f7ca-8b4f-8680-b4ff060760d7"
+]
+(* End of Notebook Content *)
+
+(* Internal cache information *)
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+(*NotebookFileOutline
+Notebook[{
+Cell[CellGroupData[{
+Cell[576, 22, 90, 0, 70, "MetadataSection",ExpressionUUID->"5a53ae7a-6714-104a-bb76-79a07b8bcab1"],
+Cell[669, 24, 468, 11, 70, "History",ExpressionUUID->"7ae5241e-cfdb-6446-aa12-9bbcb7e4063f"],
+Cell[CellGroupData[{
+Cell[1151, 39, 102, 0, 70, "CategorizationSection",ExpressionUUID->"4aff94c8-f5dc-7f46-ae8b-24f1ae375317"],
+Cell[1256, 41, 118, 2, 70, "Categorization",ExpressionUUID->"cb4caa24-3a6c-404d-8ed8-2672ed808ea9"],
+Cell[1375, 45, 154, 2, 70, "Categorization",ExpressionUUID->"b0707893-49ca-244b-a1f7-c2a714886eac"],
+Cell[1530, 49, 147, 1, 70, "Categorization",ExpressionUUID->"756f5108-566a-9747-9af1-69d5aaa8c68d"],
+Cell[1679, 52, 185, 3, 70, "Categorization",ExpressionUUID->"45d1cbd3-0c37-6d4f-ba21-5a6e7f37515f"]
+}, Closed]],
+Cell[CellGroupData[{
+Cell[1898, 60, 90, 0, 70, "KeywordsSection",ExpressionUUID->"ab93f132-55c4-a34d-9fb5-d05d3c716e02"],
+Cell[1991, 62, 95, 0, 70, "Keywords",ExpressionUUID->"c1557e97-a24d-1a43-81ad-10a4d1d09066"],
+Cell[2089, 64, 90, 0, 70, "Keywords",ExpressionUUID->"853bb9dd-1bce-c84c-8a6d-29f988795bde"],
+Cell[2182, 66, 93, 0, 70, "Keywords",ExpressionUUID->"78886b52-9584-7245-8209-ee86ce57b6ed"],
+Cell[2278, 68, 88, 0, 70, "Keywords",ExpressionUUID->"932d0d34-a445-e94c-8f64-c5b9399248c1"],
+Cell[2369, 70, 86, 0, 70, "Keywords",ExpressionUUID->"aa5267f3-4fa0-7744-a12b-bcde74a8bb25"],
+Cell[2458, 72, 85, 0, 70, "Keywords",ExpressionUUID->"76d5cc09-0038-0d4a-89a1-05eaa5cf18d9"]
+}, Closed]]
+}, Closed]],
+Cell[2570, 76, 103, 0, 70, "GuideTitle",ExpressionUUID->"302e9e48-4ab1-814b-a1df-97413838703e"],
+Cell[2676, 78, 562, 8, 70, "GuideAbstract",ExpressionUUID->"524bce9f-dd2e-1b4d-b2b5-e0a46b013080"],
+Cell[CellGroupData[{
+Cell[3255, 90, 88, 0, 70, "GuideFunctionsSection",ExpressionUUID->"746a5db8-5ccc-5c45-83e7-93aa499f31a2"],
+Cell[CellGroupData[{
+Cell[3368, 94, 112, 0, 70, "GuideFunctionsSubsection",ExpressionUUID->"dd2ece9b-2763-a341-8937-2410ecad803f"],
+Cell[3483, 96, 499, 11, 70, "GuideText",ExpressionUUID->"fb4155f7-d236-d14d-baf6-3ac276c202ef"],
+Cell[3974, 109, 481, 11, 70, "GuideText",ExpressionUUID->"1277ec29-3983-094c-9c95-4c9defe23ed1"],
+Cell[4447, 122, 816, 19, 70, "InlineGuideFunctionListing",ExpressionUUID->"e05439d2-57a8-8543-bab8-7209262395b5"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[5281, 146, 122, 0, 70, "GuideFunctionsSubsection",ExpressionUUID->"6810b598-a8b0-784e-a48a-c1c37ee0ea2a"],
+Cell[5406, 148, 512, 11, 70, "GuideText",ExpressionUUID->"46b2dd07-069a-a844-9eaa-08f27cca7db7"],
+Cell[5910, 161, 467, 10, 70, "GuideText",ExpressionUUID->"4d50cff4-f006-ee4d-a5d4-a53b6f3bc942"],
+Cell[6370, 173, 501, 11, 70, "GuideText",ExpressionUUID->"617c334e-4c44-7245-83cc-9fa131924ec9"],
+Cell[6863, 186, 485, 11, 70, "GuideText",ExpressionUUID->"4a73bace-fe58-0744-9742-8f1cdcbe0a1b"],
+Cell[7340, 199, 2233, 55, 70, "InlineGuideFunctionListing",ExpressionUUID->"23ec69d4-b323-7848-a022-449d71e8362b"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[9555, 259, 133, 0, 70, "GuideFunctionsSubsection",ExpressionUUID->"65587a40-b33a-124b-a09e-059aeb241484"],
+Cell[9691, 261, 464, 10, 70, "GuideText",ExpressionUUID->"75ac5e79-787d-194a-b7eb-7d7a9563400f"],
+Cell[10148, 273, 787, 19, 70, "InlineGuideFunctionListing",ExpressionUUID->"7f764e4f-3058-044d-8d8d-58aa2276b2c1"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[10953, 297, 115, 0, 70, "GuideFunctionsSubsection",ExpressionUUID->"62cecc61-1adf-d941-beb9-35a3a5f8abb8"],
+Cell[11071, 299, 451, 10, 70, "GuideText",ExpressionUUID->"281bfd9e-8cb7-f843-a66e-91df07f2b530"],
+Cell[11515, 311, 455, 10, 70, "GuideText",ExpressionUUID->"adc48221-463c-7048-8fec-ac441a115317"],
+Cell[11963, 323, 465, 10, 70, "GuideText",ExpressionUUID->"ff4db55c-f2e9-a74a-977e-74ed0d975c8d"],
+Cell[12421, 335, 456, 10, 70, "GuideText",ExpressionUUID->"546047bd-54c1-f04f-a3e2-067d460afe99"],
+Cell[12870, 347, 4436, 109, 70, "InlineGuideFunctionListing",ExpressionUUID->"9cd0e3f0-fe94-fd45-baa2-76d127f7dd12"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[17234, 461, 110, 0, 70, "GuideFunctionsSubsection",ExpressionUUID->"c69f774e-be8a-fe46-9201-f019e4cef6e8"],
+Cell[17347, 463, 466, 10, 70, "GuideText",ExpressionUUID->"160ca930-3fbe-3f43-89e9-b529ee6faefa"],
+Cell[17806, 475, 2610, 64, 70, "InlineGuideFunctionListing",ExpressionUUID->"232cbc54-a234-9247-8b96-29611caacfa1"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[20389, 544, 109, 0, 70, "GuideFunctionsSubsection",ExpressionUUID->"4d91c895-916d-e445-a46e-45624942547a"],
+Cell[20501, 546, 3822, 91, 70, "InlineGuideFunctionListing",ExpressionUUID->"36a892af-bb14-0649-a4c9-8749bbe701d0"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[24269, 642, 129, 0, 70, "GuideFunctionsSubsection",ExpressionUUID->"3dfd3261-77ca-4941-a61c-7770cc33cda7"],
+Cell[24401, 644, 3792, 91, 70, "InlineGuideFunctionListing",ExpressionUUID->"91c0e053-2d26-b647-9071-d6fb11ef59ff"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[28139, 740, 109, 0, 70, "GuideFunctionsSubsection",ExpressionUUID->"3b1506ba-6ab4-ca48-853b-0fdd057fb012"],
+Cell[28251, 742, 4490, 109, 70, "InlineGuideFunctionListing",ExpressionUUID->"a7cfc564-3b67-1e4f-b950-96c863d12931"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[32669, 856, 117, 0, 70, "GuideFunctionsSubsection",ExpressionUUID->"4a4a7087-98bb-f049-b3f7-63231fc486ab"],
+Cell[32789, 858, 4960, 118, 70, "InlineGuideFunctionListing",ExpressionUUID->"ba6fe0e2-4483-eb4e-ac49-fbf9bf018a8d"]
+}, Open  ]]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[37680, 982, 98, 0, 70, "GuideTutorialsSection",ExpressionUUID->"44109dae-5baf-ec4f-a171-e2a5cc33ce26"],
+Cell[37781, 984, 297, 5, 70, "GuideTutorial",ExpressionUUID->"44eb196a-f326-2c40-bdb3-0a858210729e"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[38110, 994, 104, 0, 70, "GuideRelatedLinksSection",ExpressionUUID->"a7ae42fc-683b-de4b-a196-f418f903250f"],
+Cell[38217, 996, 224, 4, 70, "GuideRelatedLinks",ExpressionUUID->"dfed003f-d01c-7144-9a97-15b45be78e47"]
+}, Open  ]]
+}
+]
+*)
+
+(* End of internal cache information *)

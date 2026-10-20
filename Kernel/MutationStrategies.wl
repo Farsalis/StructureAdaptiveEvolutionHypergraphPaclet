@@ -18,6 +18,19 @@ mutationFailure[strategy_String, rule_, message_String] :=
   ]
 
 
+(* Exact-operator provenance. ProposeCandidate Blocks $operatorTrace to {};
+   every primitive operator records itself when it commits a change, so the
+   candidate's provenance names the operators that actually ran (a failed
+   attempt records nothing). Outside a proposal tracing is off. *)
+$operatorTrace = None;
+
+recordOperator[name_String, details_Association : <||>] :=
+  If[
+    ListQ[$operatorTrace],
+    AppendTo[$operatorTrace, <|"Operator" -> name, "Details" -> details|>]
+  ]
+
+
 (* ::Subsection:: *)
 (*Multiway evolutions*)
 
@@ -110,16 +123,19 @@ GrowthBudgetMutation[
           RandomChoice[vars, arity - 1]
         ]
       },
-      (* Ordered universe: slot positions are semantic, so the fresh
-         variable lands in a random slot instead of a sorted tuple. *)
+      (* Ordered and declared universes: slot positions are semantic, so the
+         fresh variable lands in a random slot instead of a sorted tuple. *)
       If[
-        $EdgeSymmetry === "Ordered",
+        multisetUniverseQ[],
         Insert[base, newVar, RandomInteger[{1, Length[base] + 1}]],
         Sort @ Append[base, newVar]
       ]
     ],
     addedEdgeCount
   ];
+
+  recordOperator["AddRHSVariable", <|"Variable" -> newVar|>];
+  recordOperator["AddRHSEdge", <|"Edges" -> newEdges|>];
 
   lhs -> Join[rhs, newEdges]
 ];
@@ -276,16 +292,16 @@ deleteRHSEdgeMutation[rule_Rule, strategy_String] := Module[
   Which[
     Length[rhs] > 1,
 
-      lhs -> Delete[
-        rhs,
-        RandomChoice @ Range @ Length[rhs]
-      ],
+      edgeIndex = RandomChoice @ Range @ Length[rhs];
+      recordOperator["DeleteRHSEdge", <|"EdgeIndex" -> edgeIndex, "Edge" -> rhs[[edgeIndex]]|>];
+      lhs -> Delete[rhs, edgeIndex],
 
     Length[rhs] == 1 && Length[First[rhs]] > 1,
 
       edgeIndex = 1;
       vertexIndex =
         RandomChoice @ Range @ Length[rhs[[edgeIndex]]];
+      recordOperator["ReduceArity", <|"Side" -> "Right", "EdgeIndex" -> edgeIndex, "VertexIndex" -> vertexIndex|>];
 
       lhs ->
         ReplacePart[
@@ -296,6 +312,7 @@ deleteRHSEdgeMutation[rule_Rule, strategy_String] := Module[
 
     Length[rhs] == 1,
 
+      recordOperator["DeleteRHSEdge", <|"EdgeIndex" -> 1, "Edge" -> First[rhs]|>];
       lhs -> {},
 
     True,
@@ -330,16 +347,17 @@ AddLHSConditionMutation[rule_Rule] := Module[
 
   arity = First @ Commonest[Length /@ Join[lhs, rhs]];
 
-  (* Ordered universe: duplicate LHS edges are semantic under multiset
-     matching (they demand multiplicity), so any sampled tuple is a genuine
-     condition and no duplicate-rejection retry is needed. *)
+  (* Ordered and declared universes: duplicate LHS edges are semantic under
+     multiset matching (they demand multiplicity), so any sampled tuple is a
+     genuine condition and no duplicate-rejection retry is needed. *)
   If[
-    $EdgeSymmetry === "Ordered",
+    multisetUniverseQ[],
     newEdge = If[
       Length[vars] >= arity,
       RandomSample[vars, arity],
       RandomChoice[vars, arity]
     ];
+    recordOperator["AddLHSCondition", <|"Edge" -> newEdge|>];
     Return[Append[lhs, newEdge] -> rhs]
   ];
 
@@ -366,6 +384,7 @@ AddLHSConditionMutation[rule_Rule] := Module[
     ]
   ];
 
+  recordOperator["AddLHSCondition", <|"Edge" -> newEdge|>];
   Append[lhs, newEdge] -> rhs
 ]
 
@@ -410,6 +429,41 @@ GrowThenConstrainMutation[
       AddLHSConditionMutation
     }
   ]
+
+
+(* Central-search proposal with an optional phase schedule
+   (StrategyOptions -> <|"GrowThenConstrain" -> <|...|>|>):
+     "PhaseSchedule" -> "Random" (default) -- each trial picks grow or
+       constrain at random, exactly as GrowThenConstrainMutation[rule];
+     "PhaseSchedule" -> "Sequential" -- grow while the parent is below
+       "TargetVertices" or "TargetEdges" (HGMaxVerticesCount/HGMaxEdgesCount),
+       then constrain, as in GrowThenConstrainStep. *)
+growThenConstrainProposal[rule_Rule, context_Association] := Module[
+  {options, fitness, phase, proposal},
+
+  options = Lookup[context, "Options", <||>];
+
+  If[
+    Lookup[options, "PhaseSchedule", "Random"] =!= "Sequential",
+    Return @ GrowThenConstrainMutation[rule]
+  ];
+
+  fitness = Lookup[Lookup[context, "Parent", <||>], "Fitness", <||>];
+  phase =
+    If[
+      Lookup[fitness, "HGMaxVerticesCount", 0] < Lookup[options, "TargetVertices", 20] ||
+        Lookup[fitness, "HGMaxEdgesCount", 0] < Lookup[options, "TargetEdges", 20],
+      "Grow",
+      "Constrain"
+    ];
+
+  proposal = GrowThenConstrainMutation[rule, phase];
+  If[
+    FailureQ[proposal],
+    proposal,
+    <|"Rule" -> proposal, "Details" -> <|"Phase" -> phase|>|>
+  ]
+]
 
 
 GrowThenConstrainFitness[evolution_List] :=
@@ -561,16 +615,16 @@ OverlappingMatchMutation[rule_Rule] := Module[
   Which[
     Length[lhs] > 1,
 
-	  Delete[
-	    lhs,
-	    RandomChoice @ Range @ Length[lhs]
-	  ] -> rhs,
+      edgeIndex = RandomChoice @ Range @ Length[lhs];
+      recordOperator["DeleteLHSCondition", <|"EdgeIndex" -> edgeIndex, "Edge" -> lhs[[edgeIndex]]|>];
+	  Delete[lhs, edgeIndex] -> rhs,
 
     lhs =!= {} && Length[First[lhs]] > 1,
 
       edgeIndex = 1;
       vertexIndex =
         RandomChoice @ Range @ Length[lhs[[edgeIndex]]];
+      recordOperator["ReduceArity", <|"Side" -> "Left", "EdgeIndex" -> edgeIndex, "VertexIndex" -> vertexIndex|>];
 
       ReplacePart[
         lhs,
@@ -696,11 +750,10 @@ RunOverlappingMatchMutations[
 (*Delayed-termination mutation*)
 
 
-(* Proposal operator: one small RHS growth mutation. The fitness test decides
-   whether it actually increases lifetime while still terminating. *)
-
 (* Small RHS growth or a new LHS condition, mixed 50/50 with fallback, so the
-   strategy can also propose termination by match starvation. *)
+   strategy can also propose termination by match starvation. The fitness
+   test decides whether it actually increases lifetime while still
+   terminating. *)
 DelayedTerminationMutation[rule_Rule] :=
   mixedProposal[
     rule,
@@ -955,6 +1008,7 @@ IdentifyVariablesMutation[rule_Rule] := Module[
   ];
 
   pair = RandomSample[vars, 2];
+  recordOperator["IdentifyVariables", <|"Kept" -> pair[[1]], "Merged" -> pair[[2]]|>];
   rule /. pair[[2]] -> pair[[1]]
 ]
 
@@ -962,7 +1016,7 @@ IdentifyVariablesMutation[rule_Rule] := Module[
 (* Point mutation: replace one occurrence of a repeated variable with a fresh
    variable. *)
 SplitVariableMutation[rule_Rule] := Module[
-  {sides, counts, splittable, var, positions, target},
+  {sides, counts, splittable, var, positions, target, fresh},
 
   sides = {rule[[1]], rule[[2]]};
 
@@ -982,7 +1036,9 @@ SplitVariableMutation[rule_Rule] := Module[
   positions = Position[sides, var, {3}, Heads -> False];
   target = RandomChoice[positions];
 
-  sides = ReplacePart[sides, target -> Unique["v"]];
+  fresh = Unique["v"];
+  recordOperator["SplitVariable", <|"Variable" -> var, "Position" -> target, "NewVariable" -> fresh|>];
+  sides = ReplacePart[sides, target -> fresh];
   sides[[1]] -> sides[[2]]
 ]
 
@@ -1003,7 +1059,9 @@ VariableRewiringMutation[rule_Rule] :=
 (* Proposal operator: permute vertex positions inside one ordered rule edge
    (ordered-hypergraph addendum, section 3). Only positions in the selected
    edge change; edge counts, arities, and the vertex-occurrence multiset are
-   conserved. Returns the mutated rule together with provenance details. *)
+   conserved. Returns the mutated rule together with provenance details.
+   In the declared universe a permutation inside the slot group is a
+   canonical no-op and is rejected like any other. *)
 OrderedEdgePermutationMutation[rule_Rule] :=
   OrderedEdgePermutationMutation[rule, Automatic]
 
@@ -1014,11 +1072,11 @@ OrderedEdgePermutationMutation[
   {sides, targetSides, eligible, side, index, edge, permutation, newEdge, mutated, result = None},
 
   If[
-    $EdgeSymmetry =!= "Ordered",
+    !multisetUniverseQ[],
     Return @ mutationFailure[
       "OrderedEdgePermutation",
       rule,
-      "Ordered edge permutation requires the ordered universe (\"EdgeSymmetry\" -> \"Ordered\")."
+      "Ordered edge permutation requires the ordered or declared universe (\"EdgeSymmetry\" -> \"Ordered\" | \"Declared\")."
     ]
   ];
 
@@ -1089,6 +1147,7 @@ OrderedEdgePermutationMutation[
 
   If[
     AssociationQ[result],
+    recordOperator["PermuteEdge", result["Details"]];
     result,
     mutationFailure[
       "OrderedEdgePermutation",
@@ -1103,6 +1162,23 @@ OrderedEdgePermutationMutation[
 (*Registry variables and functions*)
 
 
+(* Registry specification fields:
+     "ImplementedQ", "MutationFunction" (rule -> rule | <|"Rule", "Details"|>
+       | Failure), "Operators" (the operators the strategy may apply),
+       "DefaultOptions", "RequiredMetrics" -- as before;
+     "ContextMutationFunction" -- optional; when present the central search
+       calls it as f[rule, <|"Parent" -> parentCandidate, "Options" ->
+       effectiveOptions, "Configuration" -> config|>] instead of
+       MutationFunction[rule];
+     "OptionSpecs" -- option name -> validator for "StrategyOptions";
+     "RequiredEdgeSymmetry" -- a universe or list of universes;
+     "RuleSetAware" -- True when MutationFunction takes a whole rule or rule
+       set (otherwise a rule set is mutated one member rule at a time);
+     "RequiresRuleSet" -- True when the strategy only makes sense for rule
+       sets (it is then dropped from Automatic selections for single rules);
+     "Catalog" -- number in the 15-strategy catalog, or None;
+     "PrimaryObjectives" -- metric -> direction, documentation and presets;
+     "Description". *)
 $MutationStrategyRegistry = <|
 
   "GrowthBudget" -> <|
@@ -1114,30 +1190,58 @@ $MutationStrategyRegistry = <|
       "HGMaxVerticesCount",
       "HGMaxEdgesCount",
       "HGMaxEdgeToVertexRatio"
-    }
+    },
+    "Catalog" -> 1,
+    "PrimaryObjectives" -> <|
+      "HGMaxVerticesCount" -> "Maximize",
+      "HGMaxEdgesCount" -> "Maximize",
+      "HGMaxEdgeToVertexRatio" -> "Range"
+    |>,
+    "Description" -> "Add an RHS-only variable and one or two RHS edges: larger states without density blowup."
   |>,
 
   "OverlappingMatch" -> <|
     "ImplementedQ" -> True,
     "MutationFunction" -> OverlappingMatchMutation,
-    "Operators" -> {"DeleteLHSCondition"},
+    "Operators" -> {"DeleteLHSCondition", "ReduceArity"},
     "DefaultOptions" -> <||>,
     "RequiredMetrics" -> {
       "MultiwayStateCount"
-    }
+    },
+    "Catalog" -> 6,
+    "PrimaryObjectives" -> <|"MultiwayStateCount" -> "Maximize"|>,
+    "Description" -> "Make the LHS less specific so more overlapping matches occur: broader multiway branching."
   |>,
 
   "GrowThenConstrain" -> <|
     "ImplementedQ" -> True,
     "MutationFunction" -> GrowThenConstrainMutation,
-    "Operators" -> {"AddRHSVariable", "AddRHSEdge", "DeleteRHSEdge", "AddLHSCondition"},
-    "DefaultOptions" -> <||>,
+    "ContextMutationFunction" -> growThenConstrainProposal,
+    "Operators" -> {"AddRHSVariable", "AddRHSEdge", "DeleteRHSEdge", "ReduceArity", "AddLHSCondition"},
+    "DefaultOptions" -> <|
+      "PhaseSchedule" -> "Random",
+      "TargetVertices" -> 20,
+      "TargetEdges" -> 20
+    |>,
+    "OptionSpecs" -> <|
+      "PhaseSchedule" -> (MatchQ[#, "Random" | "Sequential"] &),
+      "TargetVertices" -> (IntegerQ[#] && Positive[#] &),
+      "TargetEdges" -> (IntegerQ[#] && Positive[#] &)
+    |>,
     "RequiredMetrics" -> {
       "HaltedWithinCapQ",
       "MultiwayStateCount",
       "HGMaxVerticesCount",
       "HGMaxEdgesCount"
-    }
+    },
+    "Catalog" -> 2,
+    "PrimaryObjectives" -> <|
+      "HGMaxVerticesCount" -> "Maximize",
+      "HGMaxEdgesCount" -> "Maximize",
+      "MultiwayLongestDerivation" -> "Maximize",
+      "HaltedWithinCapQ" -> "Maximize"
+    |>,
+    "Description" -> "Grow the RHS, then make the LHS more specific so evolution eventually stops: growth followed by a genuine halt."
   |>,
 
   "DelayedTermination" -> <|
@@ -1147,7 +1251,13 @@ $MutationStrategyRegistry = <|
     "DefaultOptions" -> <|"AddedEdgesRange" -> {1, 1}|>,
     "RequiredMetrics" -> {
       "HaltedWithinCapQ"
-    }
+    },
+    "Catalog" -> 9,
+    "PrimaryObjectives" -> <|
+      "MultiwayLongestDerivation" -> "Maximize",
+      "HaltedWithinCapQ" -> "Maximize"
+    |>,
+    "Description" -> "Small RHS growth or a starving LHS condition: long-lived but finite systems."
   |>,
 
   "RuntimeThrottling" -> <|
@@ -1158,7 +1268,10 @@ $MutationStrategyRegistry = <|
     "RequiredMetrics" -> {
       "Runtime",
       "MultiwayStateCount"
-    }
+    },
+    "Catalog" -> 11,
+    "PrimaryObjectives" -> <|"Runtime" -> "Minimize"|>,
+    "Description" -> "Reduce RHS structure: computationally manageable evolution that keeps meaningful branching."
   |>,
 
   "VariableRewiring" -> <|
@@ -1166,7 +1279,10 @@ $MutationStrategyRegistry = <|
     "MutationFunction" -> VariableRewiringMutation,
     "Operators" -> {"IdentifyVariables", "SplitVariable"},
     "DefaultOptions" -> <||>,
-    "RequiredMetrics" -> {}
+    "RequiredMetrics" -> {},
+    "Catalog" -> None,
+    "PrimaryObjectives" -> <||>,
+    "Description" -> "Identify two variables or split one occurrence: a point mutation that keeps edge counts and arities."
   |>,
 
   "OrderedEdgePermutation" -> <|
@@ -1175,6 +1291,35 @@ $MutationStrategyRegistry = <|
     "Operators" -> {"PermuteEdge"},
     "DefaultOptions" -> <|"Side" -> Automatic|>,
     "RequiredMetrics" -> {},
-    "RequiredEdgeSymmetry" -> "Ordered"
+    "RequiredEdgeSymmetry" -> {"Ordered", "Declared"},
+    "Catalog" -> None,
+    "PrimaryObjectives" -> <||>,
+    "Description" -> "Permute the slots of one rule edge: orientation changes that only exist in ordered universes."
   |>
 |>;
+
+
+$RequiredStrategySpecificationKeys = {
+  "ImplementedQ", "MutationFunction", "Operators", "DefaultOptions", "RequiredMetrics"
+};
+
+
+(* Registration entry point for modules that add strategies. A malformed or
+   duplicate registration is a programming error and is thrown at load. *)
+registerMutationStrategies[strategies_Association] := (
+  KeyValueMap[
+    Function[{name, specification},
+      If[
+        !StringQ[name] || !AssociationQ[specification] ||
+          !SubsetQ[Keys[specification], $RequiredStrategySpecificationKeys] ||
+          KeyExistsQ[$MutationStrategyRegistry, name],
+        Throw[
+          Failure["InvalidStrategyRegistration", <|"Strategy" -> name|>],
+          "registration"
+        ]
+      ]
+    ],
+    strategies
+  ];
+  $MutationStrategyRegistry = Join[$MutationStrategyRegistry, strategies];
+)

@@ -11,6 +11,11 @@ hypergraphStateQ[hg_List] := AllTrue[hg, MatchQ[#, {___?AtomQ}] &]
 hypergraphStateQ[_] := False
 
 
+(* Validator for metrics that report Missing[...] when a value is undefined
+   (for example insufficient structure, or no finite longest derivation). *)
+numericOrMissingQ[value_] := NumericQ[value] || MissingQ[value]
+
+
 (* ::Section:: *)
 (*Helper functions*)
 
@@ -21,13 +26,10 @@ hypergraphStateQ[_] := False
 
 FinalState[evo_] := If[ListQ[evo], Last[evo], evo["FinalState"]]
 
-(* Deliberately compares unordered projections regardless of the active
-   universe: a coarse update-order-sensitivity signal, not state identity. *)
+(* Compares canonical final states in the active universe, so fresh vertex
+   names created by different update orders do not count as differences. *)
 FinalStatesDifferentQ[evo1_, evo2_] :=
-  ! SameQ[
-    DeleteDuplicates[Sort /@ FinalState[evo1]],
-    DeleteDuplicates[Sort /@ FinalState[evo2]]
-  ]
+  CanonicalStateForm[FinalState[evo1]] =!= CanonicalStateForm[FinalState[evo2]]
 
 
 CausalGraphsDifferentQ[evo1_, evo2_] :=
@@ -41,14 +43,22 @@ CausalGraphsDifferentQ[evo1_, evo2_] :=
 (*Dimension calculations*)
 
 
-(* Deliberately an unordered, undirected projection in every universe: the
+(* Geometry policy: every universe uses the same unordered, undirected simple
+   projection of a state (slot order and edge multiplicity ignored). The
    geometry metrics built on it measure spatial structure, not edge order. *)
 ToSpatialGraph[hg_] :=
-  SimpleGraph @ UndirectedGraph @ ResourceFunction["HypergraphToGraph"][DeleteDuplicates[Sort /@ hg]]
+  With[{edges = DeleteDuplicates[Sort /@ hg]},
+    (* The explicit vertex list keeps vertices that occur only in one-vertex
+       hyperedges, which the projection's edge list cannot carry. *)
+    SimpleGraph @ UndirectedGraph @ Graph[
+      DeleteDuplicates @ Flatten[edges],
+      EdgeList @ ResourceFunction["HypergraphToGraph"][edges]
+    ]
+  ]
 
 
 DetermineDimension[g_Graph, v_, radii_List] := Module[
-  {data, fit},
+  {data},
 
   data =
     Table[
@@ -63,8 +73,11 @@ DetermineDimension[g_Graph, v_, radii_List] := Module[
   If[
     Length[DeleteDuplicates[data[[All, 2]]]] < 2,
     Nothing,
-    fit = LinearModelFit[data, {1, x}, x];
-    fit["BestFitParameters"][[2]]
+    (* Least-squares slope in closed form: the slope LinearModelFit[data,
+       {1, x}, x] returns, without fitting a model per vertex. *)
+    With[{numeric = N[data]},
+      Covariance[numeric[[All, 1]], numeric[[All, 2]]] / Variance[numeric[[All, 1]]]
+    ]
   ]
 ]
 
@@ -96,10 +109,10 @@ LocalDimensionValues[hg_] := Module[
 
 
 (* Unordered mode: simple-hypergraph convention (sorted edges, duplicates
-   removed). Ordered mode: multiset convention -- positions and multiplicity
-   are semantic, so edges are taken as given. *)
+   removed). Ordered and declared modes: multiset convention -- edges are
+   taken as given, multiplicity included. *)
 HypergraphEdges[hg_] :=
-  If[$EdgeSymmetry === "Ordered", hg, DeleteDuplicates[Sort /@ hg]]
+  If[multisetUniverseQ[], hg, DeleteDuplicates[Sort /@ hg]]
 
 HypergraphVertices[hg_] := DeleteDuplicates @ Flatten[hg]
 
@@ -107,39 +120,71 @@ HypergraphEdgeCount[hg_] := Length @ HypergraphEdges[hg]
 HypergraphVertexCount[hg_] := Length @ HypergraphVertices[hg]
 
 
+(* Distinct edge classes of a state in the active universe: sorted tuples
+   (unordered), tuples (ordered) or least orbit tuples (declared). *)
+distinctEdgeClasses[hg_] :=
+  DeleteDuplicates @ Switch[
+    $EdgeSymmetry,
+    "Ordered", hg,
+    "Declared", declaredEdgeRepresentative /@ hg,
+    _, Sort /@ hg
+  ]
+
+
+(* Number of possible edge classes of arity k over n vertices in the active
+   universe: the orbits of the slot-symmetry group on all k-tuples of
+   vertices, repeated vertices allowed (Burnside's lemma). Unordered gives the
+   multisets Binomial[n + k - 1, k]; ordered gives the tuples n^k. *)
+possibleEdgeClassCount[n_Integer, k_Integer] :=
+  Switch[
+    $EdgeSymmetry,
+    "Ordered", n^k,
+    "Declared",
+      With[{permutations = slotPermutations[k]},
+        Total[
+          n^(Length[First @ PermutationCycles[#]] + Count[# - Range[k], 0]) & /@ permutations
+        ] / Length[permutations]
+      ],
+    _, Binomial[n + k - 1, k]
+  ]
+
+
+(* Density policy (every universe): the number of distinct edge classes
+   divided by the number of possible edge classes of the arities that occur,
+   over the state's vertices. It lies in [0, 1]; edge multiplicity is
+   reported separately (EdgeMultiplicityMax). *)
 HypergraphDensity[hg_] := Module[
-	{edges, vertices, arities, n, possibleEdges},
+  {edges, n, arities, possibleEdges},
 
-	edges = HypergraphEdges[hg];
-	vertices = HypergraphVertices[hg];
+  edges = distinctEdgeClasses[hg];
+  n = HypergraphVertexCount[hg];
 
-	arities = DeleteDuplicates[Length /@ edges];
-	n = Length[vertices];
+  arities = DeleteDuplicates[Length /@ edges];
+  possibleEdges = Total[possibleEdgeClassCount[n, #] & /@ arities];
 
-	possibleEdges = Total[Binomial[n, #] & /@ arities];
-
-	If[possibleEdges === 0,
-		0.,
-		N[Length[edges] / possibleEdges]
-	]
+  If[
+    edges === {} || possibleEdges === 0,
+    0.,
+    N[Length[edges] / possibleEdges]
+  ]
 ]
 
-OrderedHypergraphDensity[hg_] := Module[
-	{edges, vertices, arities, n, possibleEdges},
+OrderedHypergraphDensity[hg_] := Block[{$EdgeSymmetry = "Ordered"}, HypergraphDensity[hg]]
 
-	edges = DeleteDuplicates @ hg;
-	vertices = DeleteDuplicates @ Flatten[edges];
 
-	arities = DeleteDuplicates[Length /@ edges];
-	n = Length[vertices];
-
-	possibleEdges = Total[n^# & /@ arities];
-
-	If[possibleEdges === 0,
-		0.,
-		N[Length[edges] / possibleEdges]
-	]
-]
+(* Largest number of copies of one edge class (1 for duplicate-free states;
+   always 1 in the unordered universe). *)
+EdgeMultiplicityMax[hg_] :=
+  If[
+    hg === {},
+    0,
+    Max @ Values @ Counts @ Switch[
+      $EdgeSymmetry,
+      "Ordered", hg,
+      "Declared", declaredEdgeRepresentative /@ hg,
+      _, DeleteDuplicates[Sort /@ hg]
+    ]
+  ]
 
 
 (* ::Subsection:: *)
@@ -151,16 +196,16 @@ GraphSafeAltDensity[g_] := If[VertexCount[g] < 2, "-", NumberForm[N[GraphDensity
 
 
 EdgeToVertexRatio[g_Graph] := Module[
-	{edgeCount, vertexCount},
+  {edgeCount, vertexCount},
 
-	edgeCount = EdgeCount[g];
-	vertexCount = VertexCount[g];
+  edgeCount = EdgeCount[g];
+  vertexCount = VertexCount[g];
 
-	If[
-		vertexCount == 0,
-		0.,
-		N[edgeCount / vertexCount]
-	]
+  If[
+    vertexCount == 0,
+    0.,
+    N[edgeCount / vertexCount]
+  ]
 ]
 
 
@@ -181,8 +226,8 @@ TerminalStateCount[g_Graph?DirectedGraphQ] := Length @ TerminalStates[g]
 hypergraphIncidenceDegreeValues[hg_] := Values @ Counts @ Flatten[DeleteDuplicates /@ hg]
 
 degreeMetricsFromValues[d_List] := <|
-	"MaxVertexDegree" -> If[d === {}, 0, Max[d]],
-	"VertexDegreeVariance" -> If[Length[d] <= 1, 0., N @ Variance[d]]
+  "MaxVertexDegree" -> If[d === {}, 0, Max[d]],
+  "VertexDegreeVariance" -> If[Length[d] <= 1, 0., N @ Variance[d]]
 |>
 
 
@@ -191,21 +236,49 @@ degreeMetricsFromValues[d_List] := <|
 
 
 MWHypergraphLifetime[mhg_Graph] := Module[
-	{distances, terminals, initVertex},
+  {distances, terminals, initVertex},
 
-	initVertex = First @ Pick[VertexList[mhg], VertexInDegree[mhg], 0];
-	terminals = TerminalStates[mhg];
+  initVertex = First @ Pick[VertexList[mhg], VertexInDegree[mhg], 0];
+  terminals = TerminalStates[mhg];
 
-	distances = If[
-		terminals === {},
-		GraphDistance[mhg, initVertex, #] & /@ VertexList[mhg],
+  distances = If[
+    terminals === {},
+    GraphDistance[mhg, initVertex, #] & /@ VertexList[mhg],
 
-		(* We assume that wherever we terminate, one of those will be longest *)
-		GraphDistance[mhg, initVertex, #] & /@ terminals
-	];
+    (* We assume that wherever we terminate, one of those will be longest *)
+    GraphDistance[mhg, initVertex, #] & /@ terminals
+  ];
 
-	Max[DeleteCases[distances, Infinity]]
+  Max[DeleteCases[distances, Infinity]]
 ]
+
+
+(* Longest derivation of an evolution: exact when the evolution halted, the
+   longest derivation within the limits for a capped acyclic exploration,
+   Missing["CyclicStatesGraph"] when a cycle makes derivations unbounded. *)
+MultiwayLongestDerivation[evolution_Association] :=
+  Which[
+    KeyExistsQ[evolution, "LongestDerivation"],
+    evolution["LongestDerivation"],
+
+    KeyExistsQ[evolution, "StatesGraph"] && KeyExistsQ[evolution, "Generations"],
+    With[{graph = evolution["StatesGraph"]},
+      If[
+        !AcyclicGraphQ[graph] || !LoopFreeGraphQ[graph],
+        Missing["CyclicStatesGraph"],
+        longestPathLength[graph, First @ First @ evolution["Generations"]]
+      ]
+    ],
+
+    True,
+    Missing["NotAvailable"]
+  ]
+
+MultiwayLongestDerivation[rule_, state_, limits_Association : <||>] :=
+  Replace[
+    CanonicalMultiwayEvolution[rule, state, limits],
+    evolution_Association :> evolution["LongestDerivation"]
+  ]
 
 
 (* ::Subsection:: *)
@@ -233,7 +306,7 @@ ComponentMetrics[g_Graph] := Module[
 (*Update-order sensitivity*)
 
 
-(* Expects {evoOrder1, evoOrder2, ...} from mutations *)
+(* Expects {evoOrder1, evoOrder2, ...} from different update orders *)
 UpdateOrderSensitivity[runs_List] := Module[
   {pairs, stateDiffs, causalDiffs},
 
@@ -253,7 +326,7 @@ UpdateOrderSensitivity[runs_List] := Module[
 ]
 
 
-(* Expects list of hypergraph states from EvolutionObject *)
+(* Expects a list of final-state carriers (state lists or event evolutions) *)
 UpdateOrderSensitivityStateOnly[runs_List] := Module[{pairs},
 
   If[Length[runs] < 2, Return[0.]];
@@ -296,25 +369,23 @@ HypergraphBasicSizeMetrics[hg : {___List}, type : (_String | Automatic) : Automa
 	HypergraphSizeMetrics[hg, resolveMetricsType[type]]
 
 
-HypergraphSizeMetrics[hg_, type : (_String | Automatic) : Automatic] := Module[
-	{edgesCount, verticesCount, density},
+HypergraphSizeMetrics[hg_, type : (_String | Automatic) : Automatic] :=
+  Block[{$EdgeSymmetry = resolveMetricsType[type]},
+    Module[
+	{edgesCount, verticesCount},
 
 	edgesCount = HypergraphEdgeCount[hg];
 	verticesCount = HypergraphVertexCount[hg];
-
-	density = If[resolveMetricsType[type] === "Unordered",
-		HypergraphDensity[hg],
-		OrderedHypergraphDensity[hg]
-	];
 
 	<|
 	"HypergraphEdgesCount" -> edgesCount,
 	"HypergraphVerticesCount" -> verticesCount,
 	"HypergraphEdgeToVertexRatio" ->
 		If[verticesCount === 0, 0., N[edgesCount / verticesCount]],
-	"HypergraphDensity" -> density
+	"HypergraphDensity" -> HypergraphDensity[hg]
 	|>
-]
+    ]
+  ]
 
 HypergraphStatesMetrics[states_List, type : (_String | Automatic) : Automatic] := Module[{statesMetrics},
 	statesMetrics = HypergraphSizeMetrics[#, resolveMetricsType[type]] & /@ states;
@@ -366,10 +437,14 @@ FinalStateSizeMetrics[states_List] := Module[
 (*Dimensions*)
 
 
+(* Missing-value policy: a state too small for a dimension estimate (fewer
+   than four vertices in its largest component, or no nonconstant
+   neighborhood growth) gives Missing["InsufficientStructure"], never 0. *)
+
 (* Base case: single hypergraph *)
 EffectiveDimensionEstimate[hg : {___List}] := Module[
   {dims = LocalDimensionValues[hg]},
-  If[dims === {}, 0., N @ Mean[dims]]
+  If[dims === {}, Missing["InsufficientStructure"], N @ Mean[dims]]
 ]
 
 (* StatesList -> final state *)
@@ -380,7 +455,7 @@ EffectiveDimensionEstimate[states : {__?hypergraphStateQ}] :=
 (* Base case: single hypergraph *)
 DimensionVariance[hg : {___List}] := Module[
   {dims = LocalDimensionValues[hg]},
-  If[Length[dims] <= 1, 0., N @ Variance[dims]]
+  If[Length[dims] <= 1, Missing["InsufficientStructure"], N @ Variance[dims]]
 ]
 
 (* StatesList -> final state *)
@@ -527,16 +602,16 @@ ComponentMetrics[evo_WolframModelEvolutionObject] :=
 (*Dimensions*)
 
 
-(* Multiway graph -> mean over state-vertices *)
+(* Multiway graph -> mean over the state-vertices that have an estimate *)
 EffectiveDimensionEstimate[g_Graph?DirectedGraphQ] := Module[
-  {vals = EffectiveDimensionEstimate /@ Select[VertexList[g], hypergraphStateQ]},
-  If[vals === {}, 0., N @ Mean[vals]]
+  {vals = Select[EffectiveDimensionEstimate /@ Select[VertexList[g], hypergraphStateQ], NumericQ]},
+  If[vals === {}, Missing["InsufficientStructure"], N @ Mean[vals]]
 ]
 
 
 DimensionVariance[g_Graph?DirectedGraphQ] := Module[
-  {vals = DimensionVariance /@ Select[VertexList[g], hypergraphStateQ]},
-  If[vals === {}, 0., N @ Mean[vals]]
+  {vals = Select[DimensionVariance /@ Select[VertexList[g], hypergraphStateQ], NumericQ]},
+  If[vals === {}, Missing["InsufficientStructure"], N @ Mean[vals]]
 ]
 
 
@@ -700,7 +775,24 @@ statesMaxEdgeToVertexRatio[states_List] :=
     ]
   ]
 
+statesMaxDensity[states_List] :=
+  If[states === {}, 0., Max[HypergraphDensity /@ states]]
 
+statesMaxEdgeMultiplicity[states_List] :=
+  If[states === {}, 0, Max[EdgeMultiplicityMax /@ states]]
+
+
+(* Registry specification fields:
+     "Input"      -- evaluation input level (see $AllowedMetricInputs);
+     "Function"   -- the metric (a second argument receives "Parameters");
+     "Direction"  -- "Maximize" | "Minimize" | "Target" | "Range";
+     "Stage"      -- "Objective" (Pareto coordinate), "Constraint" (solution
+                     feasibility) or "Diagnostic" (reported only);
+     "Validator"  -- predicate for an admissible value;
+     "ValueType"  -- "Boolean" | "Integer" | "Real" (informational; Boolean
+                     constraints need no "Threshold");
+     optional "Artifacts", "Parameters", "Target", "Tolerance", "Range",
+     "Threshold", "Description". *)
 $FitnessMetricRegistry = <|
 
   "HaltedWithinCapQ" -> <|
@@ -708,7 +800,9 @@ $FitnessMetricRegistry = <|
     "Function" -> Function[TrueQ[#["HaltedWithinCapQ"]]],
     "Direction" -> "Maximize",
     "Stage" -> "Constraint",
-    "Validator" -> (MatchQ[#, True | False] &)
+    "Validator" -> (MatchQ[#, True | False] &),
+    "ValueType" -> "Boolean",
+    "Description" -> "True when the exploration halted: the frontier was exhausted and the explored states graph is acyclic."
   |>,
 
   "MultiwayStateCount" -> <|
@@ -716,7 +810,9 @@ $FitnessMetricRegistry = <|
     "Function" -> VertexCount,
     "Direction" -> "Maximize",
     "Stage" -> "Objective",
-    "Validator" -> NumericQ
+    "Validator" -> NumericQ,
+    "ValueType" -> "Integer",
+    "Description" -> "Number of distinct canonical states explored."
   |>,
 
   "MultiwayTransitionCount" -> <|
@@ -724,7 +820,9 @@ $FitnessMetricRegistry = <|
     "Function" -> EdgeCount,
     "Direction" -> "Maximize",
     "Stage" -> "Objective",
-    "Validator" -> NumericQ
+    "Validator" -> NumericQ,
+    "ValueType" -> "Integer",
+    "Description" -> "Number of distinct canonical state transitions explored."
   |>,
 
   "MaxMultiwayFrontierSize" -> <|
@@ -732,15 +830,29 @@ $FitnessMetricRegistry = <|
     "Function" -> Function[Max[Length /@ #["Generations"]]],
     "Direction" -> "Maximize",
     "Stage" -> "Diagnostic",
-    "Validator" -> NumericQ
+    "Validator" -> NumericQ,
+    "ValueType" -> "Integer",
+    "Description" -> "Largest number of newly discovered states in one breadth-first generation."
+  |>,
+
+  "MultiwayLongestDerivation" -> <|
+    "Input" -> "EvaluationContext",
+    "Function" -> Function[#["LongestDerivation"]],
+    "Direction" -> "Maximize",
+    "Stage" -> "Objective",
+    "Validator" -> numericOrMissingQ,
+    "ValueType" -> "Integer",
+    "Description" -> "Length of the longest derivation from the initial state: exact when the system halted, the longest found within the limits otherwise, Missing[\"CyclicStatesGraph\"] when a cycle makes derivations unbounded."
   |>,
 
   "MultiwayLifetime" -> <|
     "Input" -> "EvaluationContext",
     "Function" -> Function[Max[0, Length[DeleteCases[#["Generations"], {}]] - 1]],
     "Direction" -> "Maximize",
-    "Stage" -> "Objective",
-    "Validator" -> NumericQ
+    "Stage" -> "Diagnostic",
+    "Validator" -> NumericQ,
+    "ValueType" -> "Integer",
+    "Description" -> "Breadth-first discovery depth (non-empty generations minus one); not the longest derivation."
   |>,
 
   "TerminalStateCount" -> <|
@@ -748,7 +860,9 @@ $FitnessMetricRegistry = <|
     "Function" -> Function[Length[#["FinalStates"]]],
     "Direction" -> "Maximize",
     "Stage" -> "Diagnostic",
-    "Validator" -> NumericQ
+    "Validator" -> NumericQ,
+    "ValueType" -> "Integer",
+    "Description" -> "Number of verified terminal states (expanded states without successors)."
   |>,
 
   "NonIsomorphicTerminalStateCount" -> <|
@@ -757,7 +871,9 @@ $FitnessMetricRegistry = <|
     "Function" -> Function[Length[DeleteDuplicates[#["FinalStates"]]]],
     "Direction" -> "Maximize",
     "Stage" -> "Diagnostic",
-    "Validator" -> NumericQ
+    "Validator" -> NumericQ,
+    "ValueType" -> "Integer",
+    "Description" -> "Number of isomorphism classes of verified terminal states."
   |>,
 
   "HGMaxVerticesCount" -> <|
@@ -765,7 +881,9 @@ $FitnessMetricRegistry = <|
     "Function" -> statesMaxVertexCount,
     "Direction" -> "Maximize",
     "Stage" -> "Objective",
-    "Validator" -> NumericQ
+    "Validator" -> NumericQ,
+    "ValueType" -> "Integer",
+    "Description" -> "Largest vertex count over explored states."
   |>,
 
   "HGMaxEdgesCount" -> <|
@@ -773,7 +891,9 @@ $FitnessMetricRegistry = <|
     "Function" -> statesMaxEdgeCount,
     "Direction" -> "Maximize",
     "Stage" -> "Objective",
-    "Validator" -> NumericQ
+    "Validator" -> NumericQ,
+    "ValueType" -> "Integer",
+    "Description" -> "Largest edge count over explored states (multiplicity included in multiset universes)."
   |>,
 
   "HGMaxEdgeToVertexRatio" -> <|
@@ -782,7 +902,29 @@ $FitnessMetricRegistry = <|
     (* Range resolved from the configuration's RatioRange at selection time. *)
     "Direction" -> "Range",
     "Stage" -> "Constraint",
-    "Validator" -> NumericQ
+    "Validator" -> NumericQ,
+    "ValueType" -> "Real",
+    "Description" -> "Largest edge-to-vertex ratio over explored states; constrained to RatioRange."
+  |>,
+
+  "HGMaxDensity" -> <|
+    "Input" -> "States",
+    "Function" -> statesMaxDensity,
+    "Direction" -> "Maximize",
+    "Stage" -> "Diagnostic",
+    "Validator" -> NumericQ,
+    "ValueType" -> "Real",
+    "Description" -> "Largest HypergraphDensity over explored states (distinct edge classes over possible edge classes)."
+  |>,
+
+  "HGMaxEdgeMultiplicity" -> <|
+    "Input" -> "States",
+    "Function" -> statesMaxEdgeMultiplicity,
+    "Direction" -> "Maximize",
+    "Stage" -> "Diagnostic",
+    "Validator" -> NumericQ,
+    "ValueType" -> "Integer",
+    "Description" -> "Largest number of copies of one edge class in an explored state (always 1 in the unordered universe)."
   |>,
 
   "Runtime" -> <|
@@ -790,10 +932,13 @@ $FitnessMetricRegistry = <|
     "Function" -> Function[#["Runtime"]],
     "Direction" -> "Minimize",
     "Stage" -> "Diagnostic",
-    "Validator" -> NumericQ
+    "Validator" -> NumericQ,
+    "ValueType" -> "Real",
+    "Description" -> "Wall-clock seconds of the multiway evaluation (machine-dependent)."
   |>
 
 |>;
+
 
 $AllowedMetricInputs = {
   "State",
@@ -802,8 +947,34 @@ $AllowedMetricInputs = {
   "StatesGraph",
   "EvolutionGraph",
   "CausalGraph",
+  "EventEvolution",
+  "UpdateOrderRuns",
   "EvaluationContext"
 };
+
+
+$RequiredMetricSpecificationKeys = {"Input", "Function", "Direction", "Stage", "Validator"};
+
+
+(* Registration entry point for modules that add metrics. A malformed or
+   duplicate registration is a programming error and is thrown at load. *)
+registerFitnessMetrics[metrics_Association] := (
+  KeyValueMap[
+    Function[{name, specification},
+      If[
+        !StringQ[name] || !AssociationQ[specification] ||
+          !SubsetQ[Keys[specification], $RequiredMetricSpecificationKeys] ||
+          KeyExistsQ[$FitnessMetricRegistry, name],
+        Throw[
+          Failure["InvalidMetricRegistration", <|"Metric" -> name|>],
+          "registration"
+        ]
+      ]
+    ],
+    metrics
+  ];
+  $FitnessMetricRegistry = Join[$FitnessMetricRegistry, metrics];
+)
 
 
 ValidateFitnessMetricResult[
